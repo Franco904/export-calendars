@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Date Range Exporter"
+rootProject.name = "date-range-exporter"
 include(":app")
  
