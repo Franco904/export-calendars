@@ -59,7 +59,7 @@ fun CalendarExportScreen(
 
     Scaffold(
         modifier = modifier
-            .background(Color(0xFFBAF1E6))
+            .background(MaterialTheme.colorScheme.background)
     ) { contentPadding ->
         Column(
             verticalArrangement = Arrangement.Center,
@@ -77,7 +77,7 @@ fun CalendarExportScreen(
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "Editar calendário",
-                        tint = Color(0xFF16A085),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
@@ -94,7 +94,7 @@ fun CalendarExportScreen(
                     Icon(
                         Icons.Default.Share,
                         contentDescription = "Compartilhar calendário",
-                        tint = Color(0xFF16A085),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }

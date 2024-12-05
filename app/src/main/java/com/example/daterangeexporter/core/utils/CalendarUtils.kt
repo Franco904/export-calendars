@@ -1,4 +1,4 @@
-package com.example.daterangeexporter.core
+package com.example.daterangeexporter.core.utils
 
 import android.icu.util.Calendar
 

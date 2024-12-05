@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.daterangeexporter.core.theme.AppTheme
 
 @Composable
 fun CalendarsScreen(
@@ -21,7 +22,7 @@ fun CalendarsScreen(
     Scaffold(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
-            .clickable { onCalendarClick?.invoke(1, 2024) }
+            .clickable { onCalendarClick?.invoke(1, 2025) }
     ) { contentPadding ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -39,5 +40,7 @@ fun CalendarsScreen(
 fun CalendarsScreenPreview(
     modifier: Modifier = Modifier,
 ) {
-    CalendarsScreen(modifier = modifier)
+    AppTheme {
+        CalendarsScreen(modifier = modifier)
+    }
 }

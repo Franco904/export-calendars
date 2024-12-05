@@ -3,13 +3,10 @@ package com.example.daterangeexporter.core.composables
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -25,9 +22,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import com.example.daterangeexporter.core.getFirstDayOfWeekOfMonth
-import com.example.daterangeexporter.core.getMonthLabelByNumber
-import com.example.daterangeexporter.core.getNumberOfDaysOfMonth
+import com.example.daterangeexporter.core.theme.AppTheme
+import com.example.daterangeexporter.core.utils.getFirstDayOfWeekOfMonth
+import com.example.daterangeexporter.core.utils.getMonthLabelByNumber
+import com.example.daterangeexporter.core.utils.getNumberOfDaysOfMonth
+
+/*
+Falta:
+- [  ] Círculo e semicírculo nos dias do calendário
+- [  ] Seleção de intervalo de datas com date range picker
+- [  ] Lista de calendários com seleção de ano e calendário
+- [  ] Ícone do app
+ */
 
 @Composable
 fun BaseCalendar(
@@ -45,13 +51,13 @@ fun BaseCalendar(
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFEFEFE),
+            containerColor = MaterialTheme.colorScheme.surface,
         ),
         shape = MaterialTheme.shapes.small,
         modifier = modifier
             .border(
                 width = 1.dp,
-                color = Color(0xFFE0E0E0),
+                color = MaterialTheme.colorScheme.outlineVariant,
                 shape = MaterialTheme.shapes.small,
             )
     ) {
@@ -69,7 +75,7 @@ fun BaseCalendar(
                     letterSpacing = 0.1.em,
                     fontWeight = FontWeight.Bold,
                 ),
-                color = Color(0xB3000000),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .padding(start = 16.dp)
             )
@@ -114,7 +120,7 @@ fun CalendarDay(
 ) {
     Text(
         text = dayText,
-        color = if (mustHideText) Color.Transparent else Color(0xFF212121),
+        color = if (mustHideText) Color.Transparent else MaterialTheme.colorScheme.onSurface,
         style = MaterialTheme.typography.bodyLarge.copy(
             fontWeight = if (isWeekDayLabel) FontWeight.W500 else null,
         ),
@@ -127,5 +133,7 @@ fun CalendarDay(
 fun BaseCalendarPreview(
     modifier: Modifier = Modifier,
 ) {
-    BaseCalendar(modifier = modifier)
+    AppTheme {
+        BaseCalendar(modifier = modifier)
+    }
 }
