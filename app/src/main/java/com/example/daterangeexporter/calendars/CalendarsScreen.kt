@@ -16,12 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun CalendarsScreen(
     modifier: Modifier = Modifier,
-    onCalendarClick: (Long) -> Unit = {},
+    onCalendarClick: ((Int, Int) -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
-            .clickable { onCalendarClick(0L) }
+            .clickable { onCalendarClick?.invoke(1, 2024) }
     ) { contentPadding ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

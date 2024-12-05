@@ -11,16 +11,20 @@ object RouteHandler {
     fun NavGraphBuilder.routes(navController: NavController) {
         composable<Routes.Calendars> {
             CalendarsScreen(
-                onCalendarClick = { timestamp ->
-                    navController.navigate(Routes.CalendarExport(timestamp))
+                onCalendarClick = { month, year ->
+                    navController.navigate(Routes.CalendarExport(month, year))
                 },
             )
         }
         composable<Routes.CalendarExport> { backStackEntry ->
-            val timestamp = backStackEntry.toRoute<Routes.CalendarExport>().timestamp
+            val route = backStackEntry.toRoute<Routes.CalendarExport>()
+
+            val month = route.month
+            val year = route.year
 
             CalendarExportScreen(
-                timestamp = timestamp,
+                month = month,
+                year = year,
             )
         }
     }

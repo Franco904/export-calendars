@@ -7,5 +7,5 @@ sealed interface Routes {
     data object Calendars
 
     @Serializable
-    data class CalendarExport(val timestamp: Long)
+    data class CalendarExport(val month: Int, val year: Int)
 }

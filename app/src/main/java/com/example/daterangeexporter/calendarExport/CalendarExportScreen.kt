@@ -8,11 +8,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -29,16 +36,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.daterangeexporter.calendars.CalendarsScreen
+import com.example.daterangeexporter.core.composables.BaseCalendar
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Calendar
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val IMAGE_PNG_TYPE = "image/png"
 
 @Composable
 fun CalendarExportScreen(
-    timestamp: Long = 0L,
+    month: Int,
+    year: Int,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -48,40 +59,53 @@ fun CalendarExportScreen(
 
     Scaffold(
         modifier = modifier
-            .drawWithContent {
-                graphicsLayer.record { this@drawWithContent.drawContent() }
-                drawLayer(graphicsLayer)
-            }
+            .background(Color(0xFFBAF1E6))
     ) { contentPadding ->
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .padding(top = contentPadding.calculateTopPadding())
+                .padding(horizontal = 16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(96.dp)
-                    .background(
-                        color = Color.Cyan,
-                        shape = MaterialTheme.shapes.small,
+            Row {
+                IconButton(
+                    onClick = {
+                        // open Material date range picker
+                    },
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Editar calendário",
+                        tint = Color(0xFF16A085),
                     )
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Box(
-                modifier = Modifier
-                    .size(96.dp)
-                    .background(
-                        color = Color.LightGray,
-                        shape = MaterialTheme.shapes.small,
-                    )
-                    .clickable {
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(
+                    onClick = {
                         coroutineScope.launch {
+                            delay(100.milliseconds)
+
                             val bitmap = graphicsLayer.toImageBitmap()
                             context.shareImage(bitmap.asAndroidBitmap())
                         }
+                    },
+                ) {
+                    Icon(
+                        Icons.Default.Share,
+                        contentDescription = "Compartilhar calendário",
+                        tint = Color(0xFF16A085),
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            BaseCalendar(
+                month = month,
+                year = year,
+                modifier = Modifier
+                    .drawWithContent {
+                        graphicsLayer.record { this@drawWithContent.drawContent() }
+                        drawLayer(graphicsLayer)
                     }
             )
         }
@@ -129,8 +153,12 @@ private fun Context.deleteCalendarFiles() {
 
 @Preview
 @Composable
-fun CalendarsScreenPreview(
+fun CalendarExportScreenPreview(
     modifier: Modifier = Modifier,
 ) {
-    CalendarsScreen(modifier = modifier)
+    CalendarExportScreen(
+        month = 1,
+        year = 2025,
+        modifier = modifier
+    )
 }
