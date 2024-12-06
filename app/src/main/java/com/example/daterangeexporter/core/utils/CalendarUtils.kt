@@ -17,7 +17,7 @@ val months = mapOf(
     12 to "DEZEMBRO",
 )
 
-fun getMonthLabelByNumber(monthNumber: Int) = months[monthNumber] ?: months[1]
+fun getMonthLabelByNumber(monthNumber: Int) = months[monthNumber] ?: "JANEIRO"
 
 fun getNumberOfDaysOfMonth(month: Int, year: Int): Int {
     val calendar = Calendar.getInstance()

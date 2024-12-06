@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.daterangeexporter.calendars.CalendarsScreen
 import com.example.daterangeexporter.core.composables.BaseCalendar
+import com.example.daterangeexporter.core.theme.AppTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -98,10 +99,11 @@ fun CalendarExportScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             BaseCalendar(
                 month = month,
                 year = year,
+                selectedDays = listOf("7", "8", "9", "10"),
                 modifier = Modifier
                     .drawWithContent {
                         graphicsLayer.record { this@drawWithContent.drawContent() }
@@ -156,9 +158,11 @@ private fun Context.deleteCalendarFiles() {
 fun CalendarExportScreenPreview(
     modifier: Modifier = Modifier,
 ) {
-    CalendarExportScreen(
-        month = 1,
-        year = 2025,
-        modifier = modifier
-    )
+    AppTheme {
+        CalendarExportScreen(
+            month = 1,
+            year = 2025,
+            modifier = modifier
+        )
+    }
 }
