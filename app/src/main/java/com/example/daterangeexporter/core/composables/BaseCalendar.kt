@@ -2,21 +2,19 @@ package com.example.daterangeexporter.core.composables
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -31,30 +29,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.example.daterangeexporter.core.theme.AppTheme
-import com.example.daterangeexporter.core.utils.getFirstDayOfWeekOfMonth
-import com.example.daterangeexporter.core.utils.getMonthLabelByNumber
-import com.example.daterangeexporter.core.utils.getNumberOfDaysOfMonth
+import com.example.daterangeexporter.core.utils.CalendarUtils
 
-/*
-Falta:
-- [ x ] Círculo e semicírculo nos dias do calendário
-- [  ] Seleção de intervalo de datas com date range picker
-- [  ] Lista de calendários com seleção de ano e calendário
-- [  ] Ícone do app
- */
 
 @Composable
 fun BaseCalendar(
     month: Int,
     year: Int,
     modifier: Modifier = Modifier,
-    selectedDays: List<String> = emptyList(),
+    selectedDates: List<String> = emptyList(),
+    hasTheStartDate: Boolean = false,
+    hasTheEndDate: Boolean = false,
 ) {
-    val monthLabel = getMonthLabelByNumber(monthNumber = month)
+    val monthLabel = CalendarUtils.getMonthLabelByNumber(monthNumber = month)
     val daysOfWeekLabels = listOf("D", "S", "T", "Q", "Q", "S", "S")
 
-    val numberOfDaysOfMonth = getNumberOfDaysOfMonth(month, year)
-    val firstDayOfWeek = getFirstDayOfWeekOfMonth(month, year)
+    val numberOfDaysOfMonth = CalendarUtils.getNumberOfDaysOfMonth(month, year)
+    val firstDayOfWeek = CalendarUtils.getFirstDayOfWeekOfMonth(month, year)
 
     val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
 
@@ -87,7 +78,9 @@ fun BaseCalendar(
                 daysOfWeekLabels = daysOfWeekLabels,
                 firstDayOfWeek = firstDayOfWeek,
                 days = days,
-                selectedDays = selectedDays,
+                selectedDates = selectedDates,
+                hasTheStartDate = hasTheStartDate,
+                hasTheEndDate = hasTheEndDate,
             )
         }
     }
@@ -116,7 +109,9 @@ fun CalendarSection(
     daysOfWeekLabels: List<String>,
     firstDayOfWeek: Int,
     days: List<String>,
-    selectedDays: List<String>,
+    selectedDates: List<String>,
+    hasTheStartDate: Boolean,
+    hasTheEndDate: Boolean,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -124,6 +119,7 @@ fun CalendarSection(
         modifier = modifier
             .padding(start = 13.dp)
             .wrapContentSize()
+            .heightIn(max = 500.dp)
     ) {
         items(daysOfWeekLabels) { dayOfWeek ->
             CalendarDay(
@@ -146,7 +142,7 @@ fun CalendarSection(
         }
 
         items(days) { day ->
-            val isSelected = day in selectedDays
+            val isSelected = day in selectedDates
             val calendarDayModifier =
                 if (day.length == 1) Modifier.offset(x = (-0.5).dp) else Modifier
 
@@ -159,8 +155,8 @@ fun CalendarSection(
             CalendarDay(
                 dayText = day,
                 isSelected = isSelected,
-                isStartSelectedDay = isSelected && day == selectedDays.firstOrNull(),
-                isEndSelectedDay = isSelected && day == selectedDays.lastOrNull(),
+                isStartSelectedDay = hasTheStartDate && isSelected && day == selectedDates.firstOrNull(),
+                isEndSelectedDay = hasTheEndDate && isSelected && day == selectedDates.lastOrNull(),
                 modifier = calendarDayModifier
                     .wrapContentSize()
                     .padding(bottom = paddingBottom)
@@ -238,7 +234,7 @@ fun BaseCalendarPreview(
         BaseCalendar(
             month = 1,
             year = 2025,
-            selectedDays = listOf("7", "8", "9", "10"),
+            selectedDates = listOf("7", "8", "9", "10"),
             modifier = modifier,
         )
     }

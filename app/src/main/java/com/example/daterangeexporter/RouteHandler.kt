@@ -19,12 +19,13 @@ object RouteHandler {
         composable<Routes.CalendarExport> { backStackEntry ->
             val route = backStackEntry.toRoute<Routes.CalendarExport>()
 
-            val month = route.month
-            val year = route.year
+            val selectedMonth = route.month
+            val selectedYear = route.year
 
             CalendarExportScreen(
-                month = month,
-                year = year,
+                selectedMonth = selectedMonth,
+                selectedYear = selectedYear,
+                onUpNavigation = { navController.navigateUp() }
             )
         }
     }
