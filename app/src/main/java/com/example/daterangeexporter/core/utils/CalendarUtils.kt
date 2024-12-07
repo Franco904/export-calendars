@@ -1,7 +1,7 @@
 package com.example.daterangeexporter.core.utils
 
 import android.icu.util.Calendar
-import com.example.daterangeexporter.core.composeModels.MonthYear
+import com.example.daterangeexporter.core.composeModels.CalendarMonthYear
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.TimeZone
@@ -41,7 +41,7 @@ object CalendarUtils {
     fun getDatesGroupedByMonthAndYear(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
-    ): Map<MonthYear, List<String>> {
+    ): Map<CalendarMonthYear, List<String>> {
         val startDateCalendar = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             .apply { timeInMillis = startDateTimeMillis }
 
@@ -67,7 +67,7 @@ object CalendarUtils {
 
         return dates
             .groupBy { date ->
-                MonthYear(
+                CalendarMonthYear(
                     id = date.month.value + date.year,
                     month = date.month.value,
                     year = date.year,
