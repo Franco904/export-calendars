@@ -2,24 +2,21 @@ package com.example.daterangeexporter.calendarExport
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.DateRangePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,7 +28,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,9 +35,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,18 +48,13 @@ import com.example.daterangeexporter.core.composeModels.CalendarMonthYear
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.deleteAllFiles
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.saveImage
 import com.example.daterangeexporter.core.theme.AppTheme
-import com.example.daterangeexporter.core.utils.BaseCalendarState
 import com.example.daterangeexporter.core.utils.CalendarUtils
-import com.example.daterangeexporter.core.utils.ComposableToBitmapConverter.captureCalendarComposablesAsBitmap
 import com.example.daterangeexporter.core.utils.IMAGE_PNG_TYPE
 import com.example.daterangeexporter.core.utils.itemsIndexed
 import com.example.daterangeexporter.core.utils.showShareSheet
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -74,10 +65,9 @@ fun CalendarExportScreen(
     modifier: Modifier = Modifier,
     onUpNavigation: () -> Boolean = { true },
 ) {
-    val calendars = mutableListOf(BaseCalendarState(selectedMonth, selectedYear))
-
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val lazyListState = rememberLazyListState()
 
     var mustShowDateRangePickerDialog by remember { mutableStateOf(false) }
 
@@ -86,44 +76,21 @@ fun CalendarExportScreen(
         month = selectedMonth,
         year = selectedYear,
     )
-    var selectedDates by remember {
+    var selectedDates by rememberSaveable {
         mutableStateOf<Map<CalendarMonthYear, List<String>>>(mapOf(initialCalendar to emptyList()))
     }
-
-    var selectedCalendarsForExport by remember {
-        mutableStateOf<PersistentList<CalendarMonthYear>>(persistentListOf())
-    }
-
-    var isSelectingForExport by remember { mutableStateOf(false) }
-
-    var selectedCalendar by remember { mutableStateOf<CalendarMonthYear?>(null) }
-    var selectedCalendarImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
     Scaffold(
         topBar = {
             CalendarExportTopBar(
-                isAnyCalendarSelected = selectedCalendar != null,
                 onUpNavigation = onUpNavigation,
                 onEditCalendar = { mustShowDateRangePickerDialog = true },
-                onExportCalendar = {
-                    if (selectedCalendarImageBitmap == null) return@CalendarExportTopBar
-
-                    coroutineScope.launch {
-                        context.exportCalendarImage(bitmap = selectedCalendarImageBitmap!!)
-                    }
-                },
-                onCancelExport = {
-                    isSelectingForExport = false
-                    selectedCalendarsForExport = persistentListOf()
-                },
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
             .fillMaxSize()
     ) { contentPadding ->
-        val lazyListState = rememberLazyListState()
-
         LazyColumn(
             state = lazyListState,
             modifier = Modifier
@@ -145,18 +112,6 @@ fun CalendarExportScreen(
                                 startDateTimeMillis = startDateTimeMillis,
                                 endDateTimeMillis = endDateTimeMillis,
                             )
-
-                            selectedDates.forEach { (calendarMonthYear, dates) ->
-                                calendars.add(
-                                    BaseCalendarState(
-                                        month = calendarMonthYear.month,
-                                        year = calendarMonthYear.year,
-                                        hasTheStartDate = calendarMonthYear == selectedDates.keys.first(),
-                                        hasTheEndDate = calendarMonthYear == selectedDates.keys.last(),
-                                        selectedDates = dates,
-                                    ),
-                                )
-                            }
                         },
                         onDismiss = {
                             mustShowDateRangePickerDialog = false
@@ -170,15 +125,15 @@ fun CalendarExportScreen(
             ) { i, (calendarMonthYear, dates) ->
                 val onBeforeCalendarSelect: suspend () -> Unit = {
                     lazyListState.animateScrollToItem(i)
-                    delay(100.milliseconds)
+                    lazyListState.scrollBy(4f)
+                    delay(250.milliseconds)
                 }
 
-                val onCalendarSelect = { imageBitmap: ImageBitmap ->
-                    // Save screenshot of the selected calendar composable
-                    selectedCalendarImageBitmap =
-                        if (imageBitmap == selectedCalendarImageBitmap) null else imageBitmap
-                    selectedCalendar =
-                        if (imageBitmap == selectedCalendarImageBitmap) null else calendarMonthYear
+                val onCalendarSelect: (ImageBitmap) -> Unit = { imageBitmap: ImageBitmap ->
+                    coroutineScope.launch {
+                        // Export to other apps in the device
+                        context.exportCalendarImage(imageBitmap)
+                    }
                 }
 
                 if (i == 0) {
@@ -190,9 +145,9 @@ fun CalendarExportScreen(
                     hasTheStartDate = calendarMonthYear == selectedDates.keys.first(),
                     hasTheEndDate = calendarMonthYear == selectedDates.keys.last(),
                     selectedDates = dates,
-                    isCardSelected = selectedCalendar == calendarMonthYear,
                     onBeforeCardSelect = onBeforeCalendarSelect,
                     onCardSelect = onCalendarSelect,
+                    modifier = Modifier
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -203,54 +158,39 @@ fun CalendarExportScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarExportTopBar(
-    isAnyCalendarSelected: Boolean,
     onUpNavigation: () -> Boolean,
     onEditCalendar: () -> Unit,
-    onExportCalendar: () -> Unit,
-    onCancelExport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
         title = {
             Text(
-                if (isAnyCalendarSelected) "Compartilhar" else "Calendário",
+                text = "Calendário",
                 style = MaterialTheme.typography.titleLarge,
-                color = if (isAnyCalendarSelected) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 16.dp)
             )
         },
         navigationIcon = {
-            if (isAnyCalendarSelected) {
-                IconButton(onClick = onCancelExport) {
-                    Icon(
-                        Icons.Filled.Close,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
-            } else {
-                IconButton(onClick = { onUpNavigation() }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
+            IconButton(onClick = { onUpNavigation() }) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
             }
         },
         actions = {
-            CalendarButtonsSection(
-                isAnyCalendarSelected = isAnyCalendarSelected,
-                onEditCalendar = onEditCalendar,
-                onExportCalendar = onExportCalendar,
-            )
+            IconButton(onClick = onEditCalendar) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Editar calendário",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = if (isAnyCalendarSelected) {
-                MaterialTheme.colorScheme.primary
-            } else MaterialTheme.colorScheme.background,
+            containerColor = MaterialTheme.colorScheme.background,
         ),
         modifier = modifier,
     )
@@ -294,47 +234,25 @@ fun DateRangePickerModal(
             title = {
                 Text(
                     text = "Selecione o período da estadia",
-                    Modifier
-                        .padding(start = 16.dp)
+                    modifier = Modifier
+                        .padding(16.dp)
+                )
+            },
+            headline = {
+                DateRangePickerDefaults.DateRangePickerHeadline(
+                    selectedStartDateMillis = dateRangePickerState.selectedStartDateMillis,
+                    selectedEndDateMillis = dateRangePickerState.selectedEndDateMillis,
+                    displayMode = dateRangePickerState.displayMode,
+                    dateFormatter = DatePickerDefaults.dateFormatter(),
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .scale(0.9f)
                 )
             },
             showModeToggle = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
         )
-    }
-}
-
-@Composable
-fun CalendarButtonsSection(
-    isAnyCalendarSelected: Boolean,
-    onEditCalendar: () -> Unit,
-    onExportCalendar: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-    ) {
-        if (!isAnyCalendarSelected) {
-            IconButton(onClick = onEditCalendar) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Editar calendário",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-        }
-        if (isAnyCalendarSelected) {
-            IconButton(onClick = onExportCalendar) {
-                Icon(
-                    Icons.Default.Share,
-                    contentDescription = "Compartilhar calendário",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                )
-            }
-        }
     }
 }
 

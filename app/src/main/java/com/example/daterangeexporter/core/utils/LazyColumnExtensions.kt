@@ -16,7 +16,7 @@ inline fun <K, V> LazyListScope.itemsIndexed(
         count = items.size,
         key = if (key != null) { index: Int -> key(index, entries[index]) } else null,
         contentType = { index: Int -> contentType(index, entries[index]) }
-    ) {index ->
+    ) { index ->
         itemContent(index, entries[index])
     }
 }

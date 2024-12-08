@@ -1,11 +1,8 @@
 package com.example.daterangeexporter.core.composables
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -25,11 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -45,9 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
@@ -58,10 +49,12 @@ fun BaseCalendar(
     selectedDates: List<String> = emptyList(),
     hasTheStartDate: Boolean = false,
     hasTheEndDate: Boolean = false,
-    isCardSelected: Boolean = false,
     onBeforeCardSelect: suspend () -> Unit = {},
-    onCardSelect: (ImageBitmap) -> Unit = { _ -> },
+    onCardSelect: (ImageBitmap) -> Unit = {},
 ) {
+    val graphicsLayer = rememberGraphicsLayer()
+    val coroutineScope = rememberCoroutineScope()
+
     val monthLabel = CalendarUtils.getMonthLabelByNumber(monthNumber = month)
     val daysOfWeekLabels = listOf("D", "S", "T", "Q", "Q", "S", "S")
 
@@ -70,17 +63,7 @@ fun BaseCalendar(
 
     val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
 
-    val graphicsLayer = rememberGraphicsLayer()
-
     CalendarCard(
-        isSelected = isCardSelected,
-        onSelect = {
-            onBeforeCardSelect()
-
-            val imageBitmap = graphicsLayer.toImageBitmap()
-
-            onCardSelect(imageBitmap)
-        },
         modifier = modifier
             .drawWithContent {
                 graphicsLayer.record { this@drawWithContent.drawContent() }
@@ -107,6 +90,16 @@ fun BaseCalendar(
                 selectedDates = selectedDates,
                 hasTheStartDate = hasTheStartDate,
                 hasTheEndDate = hasTheEndDate,
+                onSelect = {
+                    coroutineScope.launch {
+                        onBeforeCardSelect()
+
+                        // Save a screenshot of the selected calendar composable
+                        val imageBitmap = graphicsLayer.toImageBitmap()
+
+                        onCardSelect(imageBitmap)
+                    }
+                }
             )
         }
     }
@@ -114,45 +107,16 @@ fun BaseCalendar(
 
 @Composable
 fun CalendarCard(
-    isSelected: Boolean,
-    onSelect: suspend () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val outlineVariantColor = MaterialTheme.colorScheme.outlineVariant
-    val surfaceColor = MaterialTheme.colorScheme.surface
-    val secondaryContainerColor = MaterialTheme.colorScheme.secondaryContainer
-
-    var borderColor by remember { mutableStateOf(if (isSelected) primaryColor else outlineVariantColor) }
-    val borderColorAnimated by animateColorAsState(borderColor, label = "borderColor")
-
-    var borderWidth by remember { mutableStateOf(if (isSelected) (2).dp else 1.dp) }
-    val borderWidthAnimated by animateDpAsState(borderWidth, label = "borderColor")
-
-    var containerColor by remember { mutableStateOf(if (isSelected) secondaryContainerColor else surfaceColor) }
-    val containerColorAnimated by animateColorAsState(containerColor, label = "containerColor")
-
-    val coroutineScope = rememberCoroutineScope()
-
     Card(
-        colors = CardDefaults.cardColors(containerColor = containerColorAnimated),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = MaterialTheme.shapes.small,
-        onClick = {
-            coroutineScope.launch {
-                onSelect()
-
-                val isNowSelected = !isSelected
-
-                borderColor = if (isNowSelected) primaryColor else outlineVariantColor
-                borderWidth = if (isNowSelected) (2).dp else 1.dp
-                containerColor = if (isNowSelected) secondaryContainerColor else surfaceColor
-            }
-        },
         modifier = modifier
             .border(
-                width = borderWidthAnimated,
-                color = borderColorAnimated,
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
                 shape = MaterialTheme.shapes.small,
             )
     ) {
@@ -186,6 +150,7 @@ fun CalendarSection(
     selectedDates: List<String>,
     hasTheStartDate: Boolean,
     hasTheEndDate: Boolean,
+    onSelect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -221,8 +186,8 @@ fun CalendarSection(
                 if (day.length == 1) Modifier.offset(x = (-0.5).dp) else Modifier
 
             val paddingBottom = when {
-                isSelected -> 16.dp
                 day in days.takeLast(7) -> 0.dp
+                isSelected -> 16.dp
                 else -> 24.dp
             }
 
@@ -234,6 +199,11 @@ fun CalendarSection(
                 modifier = calendarDayModifier
                     .wrapContentSize()
                     .padding(bottom = paddingBottom)
+                    .pointerInput(Unit) {
+                        detectTapGestures {
+                            onSelect()
+                        }
+                    }
             )
         }
     }
@@ -308,7 +278,9 @@ fun BaseCalendarPreview(
         BaseCalendar(
             month = 1,
             year = 2025,
-            selectedDates = listOf("7", "8", "9", "10"),
+            hasTheStartDate = true,
+            hasTheEndDate = true,
+            selectedDates = listOf("27", "28", "29", "30", "31"),
             modifier = modifier,
         )
     }
