@@ -12,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.daterangeexporter.core.theme.AppTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -32,7 +30,7 @@ import kotlinx.collections.immutable.persistentListOf
 fun DropdownField(
     placeholderText: String,
     items: ImmutableList<String>,
-    onItemSelected: (String) -> Unit,
+    onItemSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
     defaultItem: String? = null,
 ) {
@@ -76,7 +74,7 @@ fun DropdownField(
                 DropdownMenuItem(
                     text = { Text(item) },
                     onClick = {
-                        onItemSelected(item)
+                        onItemSelect(item)
 
                         selectedItem = item
                         isExpanded = false
@@ -94,7 +92,7 @@ fun DropdownFieldPreview() {
         DropdownField(
             placeholderText = "Placeholder",
             items = persistentListOf(),
-            onItemSelected = {},
+            onItemSelect = {},
         )
     }
 }
