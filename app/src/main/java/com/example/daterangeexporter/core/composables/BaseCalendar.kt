@@ -66,18 +66,17 @@ fun BaseCalendar(
     val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
 
     CalendarCard(
-        onSelect = if (showRippleOnCardClick) {
-            {
-                coroutineScope.launch {
-                    onBeforeCardSelect()
+        onSelect = {
+            coroutineScope.launch {
+                onBeforeCardSelect()
 
-                    // Save a screenshot of the selected calendar composable
-                    val imageBitmap = graphicsLayer.toImageBitmap()
+                // Save a screenshot of the selected calendar composable
+                val imageBitmap = graphicsLayer.toImageBitmap()
 
-                    onCardSelect(imageBitmap)
-                }
+                onCardSelect(imageBitmap)
             }
-        } else null,
+        },
+        showRippleOnCardClick = showRippleOnCardClick,
         modifier = modifier
             .drawWithContent {
                 graphicsLayer.record { this@drawWithContent.drawContent() }
@@ -97,25 +96,13 @@ fun BaseCalendar(
                 year = if (showYearLabel) year else null,
             )
             Spacer(modifier = Modifier.height(20.dp))
-            CalendarSection(
+            DatesSection(
                 daysOfWeekLabels = daysOfWeekLabels,
                 firstDayOfWeek = firstDayOfWeek,
                 days = days,
                 selectedDates = selectedDates,
                 hasTheStartDate = hasTheStartDate,
                 hasTheEndDate = hasTheEndDate,
-                onSelect = if (showRippleOnCardClick) null else {
-                    {
-                        coroutineScope.launch {
-                            onBeforeCardSelect()
-
-                            // Save a screenshot of the selected calendar composable
-                            val imageBitmap = graphicsLayer.toImageBitmap()
-
-                            onCardSelect(imageBitmap)
-                        }
-                    }
-                }
             )
         }
     }
@@ -123,11 +110,12 @@ fun BaseCalendar(
 
 @Composable
 fun CalendarCard(
-    onSelect: (() -> Unit)?,
+    onSelect: () -> Unit,
+    showRippleOnCardClick: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
-    if (onSelect != null) {
+    if (showRippleOnCardClick) {
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = MaterialTheme.shapes.small,
@@ -151,6 +139,11 @@ fun CalendarCard(
                     color = MaterialTheme.colorScheme.outlineVariant,
                     shape = MaterialTheme.shapes.small,
                 )
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        onSelect()
+                    }
+                }
         ) {
             content()
         }
@@ -176,14 +169,13 @@ fun MonthLabelSection(
 }
 
 @Composable
-fun CalendarSection(
+fun DatesSection(
     daysOfWeekLabels: List<String>,
     firstDayOfWeek: Int,
     days: List<String>,
     selectedDates: List<String>,
     hasTheStartDate: Boolean,
     hasTheEndDate: Boolean,
-    onSelect: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -194,7 +186,7 @@ fun CalendarSection(
             .heightIn(max = 500.dp)
     ) {
         items(daysOfWeekLabels) { dayOfWeek ->
-            CalendarDay(
+            CalendarDate(
                 dayText = dayOfWeek,
                 isWeekDayLabel = true,
                 modifier = Modifier
@@ -204,7 +196,7 @@ fun CalendarSection(
         }
 
         items(firstDayOfWeek - 1) {
-            CalendarDay(
+            CalendarDate(
                 dayText = "N",
                 mustHideText = true,
                 modifier = Modifier
@@ -224,7 +216,7 @@ fun CalendarSection(
                 else -> 24.dp
             }
 
-            CalendarDay(
+            CalendarDate(
                 dayText = day,
                 isSelected = isSelected,
                 isStartSelectedDay = hasTheStartDate && isSelected && day == selectedDates.firstOrNull(),
@@ -232,18 +224,13 @@ fun CalendarSection(
                 modifier = calendarDayModifier
                     .wrapContentSize()
                     .padding(bottom = paddingBottom)
-                    .pointerInput(Unit) {
-                        detectTapGestures {
-                            onSelect?.invoke()
-                        }
-                    }
             )
         }
     }
 }
 
 @Composable
-fun CalendarDay(
+fun CalendarDate(
     dayText: String,
     modifier: Modifier = Modifier,
     mustHideText: Boolean = false,
@@ -258,7 +245,7 @@ fun CalendarDay(
             .offset(y = if (isSelected) (-5.5).dp else 0.dp)
     ) {
         if (isSelected) {
-            SelectedCircle(
+            SelectedDateCircle(
                 isStartSelectedDay = isStartSelectedDay,
                 isEndSelectedDay = isEndSelectedDay,
             )
@@ -274,7 +261,7 @@ fun CalendarDay(
 }
 
 @Composable
-fun SelectedCircle(
+fun SelectedDateCircle(
     modifier: Modifier = Modifier,
     isStartSelectedDay: Boolean,
     isEndSelectedDay: Boolean,
