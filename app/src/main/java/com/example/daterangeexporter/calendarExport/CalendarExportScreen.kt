@@ -101,6 +101,7 @@ fun CalendarExportScreen(
             if (mustShowDateRangePickerDialog) {
                 item {
                     DateRangePickerModal(
+                        initialCalendar = initialCalendar,
                         onDateRangeSelected = { (startDateTimeMillis, endDateTimeMillis) ->
                             mustShowDateRangePickerDialog = false
 
@@ -147,7 +148,6 @@ fun CalendarExportScreen(
                     selectedDates = dates,
                     onBeforeCardSelect = onBeforeCalendarSelect,
                     onCardSelect = onCalendarSelect,
-                    modifier = Modifier
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -199,11 +199,17 @@ fun CalendarExportTopBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateRangePickerModal(
+    initialCalendar: CalendarMonthYear,
     onDateRangeSelected: (Pair<Long?, Long?>) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val dateRangePickerState = rememberDateRangePickerState()
+    val dateRangePickerState = rememberDateRangePickerState(
+        initialDisplayedMonthMillis = CalendarUtils.getMonthTimestamp(
+            month = initialCalendar.month,
+            year = initialCalendar.year,
+        )
+    )
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
