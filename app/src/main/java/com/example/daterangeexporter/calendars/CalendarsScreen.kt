@@ -1,9 +1,7 @@
 package com.example.daterangeexporter.calendars
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -13,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.edit
 import com.example.daterangeexporter.core.composables.BaseCalendar
 import com.example.daterangeexporter.core.composables.DropdownField
-import com.example.daterangeexporter.core.composables.borderBottom
 import com.example.daterangeexporter.core.constants.DEFAULT_SELECTED_YEAR
 import com.example.daterangeexporter.core.constants.SELECTED_YEAR
 import com.example.daterangeexporter.core.infra.dataStore
