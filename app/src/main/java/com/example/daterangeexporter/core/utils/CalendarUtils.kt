@@ -24,6 +24,28 @@ object CalendarUtils {
 
     fun getMonthLabelByNumber(monthNumber: Int) = months[monthNumber] ?: "JANEIRO"
 
+    fun getNextYears(): List<Int> {
+        val currentYear = getCurrentYear()
+        val nextYears = mutableListOf<Int>()
+
+        for (year in currentYear..2030) {
+            nextYears.add(year)
+        }
+
+        return nextYears
+    }
+
+    fun getCurrentYear(): Int = Calendar.getInstance().get(Calendar.YEAR)
+
+    fun getCurrentMonth(): Int = Calendar.getInstance().get(Calendar.MONTH)
+
+    fun getMonthTimestamp(month: Int, year: Int): Long {
+        val calendar = Calendar.getInstance()
+        calendar.set(year, month - 1, 1)
+
+        return calendar.timeInMillis
+    }
+
     fun getNumberOfDaysOfMonth(month: Int, year: Int): Int {
         val calendar = Calendar.getInstance()
         calendar.set(year, month - 1, 1)

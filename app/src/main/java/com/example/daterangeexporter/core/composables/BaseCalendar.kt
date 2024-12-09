@@ -46,6 +46,8 @@ fun BaseCalendar(
     month: Int,
     year: Int,
     modifier: Modifier = Modifier,
+    showYearLabel: Boolean = true,
+    showRippleOnCardClick: Boolean = false,
     selectedDates: List<String> = emptyList(),
     hasTheStartDate: Boolean = false,
     hasTheEndDate: Boolean = false,
@@ -64,6 +66,18 @@ fun BaseCalendar(
     val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
 
     CalendarCard(
+        onSelect = if (showRippleOnCardClick) {
+            {
+                coroutineScope.launch {
+                    onBeforeCardSelect()
+
+                    // Save a screenshot of the selected calendar composable
+                    val imageBitmap = graphicsLayer.toImageBitmap()
+
+                    onCardSelect(imageBitmap)
+                }
+            }
+        } else null,
         modifier = modifier
             .drawWithContent {
                 graphicsLayer.record { this@drawWithContent.drawContent() }
@@ -80,7 +94,7 @@ fun BaseCalendar(
         ) {
             MonthLabelSection(
                 monthLabel = monthLabel,
-                year = year,
+                year = if (showYearLabel) year else null,
             )
             Spacer(modifier = Modifier.height(20.dp))
             CalendarSection(
@@ -90,14 +104,16 @@ fun BaseCalendar(
                 selectedDates = selectedDates,
                 hasTheStartDate = hasTheStartDate,
                 hasTheEndDate = hasTheEndDate,
-                onSelect = {
-                    coroutineScope.launch {
-                        onBeforeCardSelect()
+                onSelect = if (showRippleOnCardClick) null else {
+                    {
+                        coroutineScope.launch {
+                            onBeforeCardSelect()
 
-                        // Save a screenshot of the selected calendar composable
-                        val imageBitmap = graphicsLayer.toImageBitmap()
+                            // Save a screenshot of the selected calendar composable
+                            val imageBitmap = graphicsLayer.toImageBitmap()
 
-                        onCardSelect(imageBitmap)
+                            onCardSelect(imageBitmap)
+                        }
                     }
                 }
             )
@@ -107,31 +123,48 @@ fun BaseCalendar(
 
 @Composable
 fun CalendarCard(
+    onSelect: (() -> Unit)?,
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = MaterialTheme.shapes.small,
-        modifier = modifier
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-                shape = MaterialTheme.shapes.small,
-            )
-    ) {
-        content()
+    if (onSelect != null) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = MaterialTheme.shapes.small,
+            onClick = onSelect,
+            modifier = modifier
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = MaterialTheme.shapes.small,
+                )
+        ) {
+            content()
+        }
+    } else {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = MaterialTheme.shapes.small,
+            modifier = modifier
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = MaterialTheme.shapes.small,
+                )
+        ) {
+            content()
+        }
     }
 }
 
 @Composable
 fun MonthLabelSection(
     monthLabel: String,
-    year: Int,
+    year: Int?,
     modifier: Modifier = Modifier,
 ) {
     Text(
-        "$monthLabel $year",
+        if (year != null) "$monthLabel $year" else monthLabel,
         style = MaterialTheme.typography.labelSmall.copy(
             letterSpacing = 0.1.em,
             fontWeight = FontWeight.Bold,
@@ -150,7 +183,7 @@ fun CalendarSection(
     selectedDates: List<String>,
     hasTheStartDate: Boolean,
     hasTheEndDate: Boolean,
-    onSelect: () -> Unit,
+    onSelect: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -201,7 +234,7 @@ fun CalendarSection(
                     .padding(bottom = paddingBottom)
                     .pointerInput(Unit) {
                         detectTapGestures {
-                            onSelect()
+                            onSelect?.invoke()
                         }
                     }
             )
