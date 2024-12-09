@@ -1,7 +1,7 @@
 package com.example.daterangeexporter.core.utils
 
 import android.icu.util.Calendar
-import com.example.daterangeexporter.core.composeModels.CalendarMonthYear
+import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.TimeZone

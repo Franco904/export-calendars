@@ -35,7 +35,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -44,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.os.bundleOf
 import com.example.daterangeexporter.core.composables.BaseCalendar
-import com.example.daterangeexporter.core.composeModels.CalendarMonthYear
+import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.deleteAllFiles
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.saveImage
 import com.example.daterangeexporter.core.theme.AppTheme
@@ -162,6 +164,8 @@ fun CalendarExportTopBar(
     onEditCalendar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val outlineVariantColor = MaterialTheme.colorScheme.outlineVariant
+
     TopAppBar(
         title = {
             Text(
@@ -192,7 +196,15 @@ fun CalendarExportTopBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background,
         ),
-        modifier = modifier,
+        modifier = modifier
+            .drawBehind {
+                drawLine(
+                    color = outlineVariantColor,
+                    start = Offset(x = 0f, y = size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 2.dp.toPx(),
+                )
+            }
     )
 }
 

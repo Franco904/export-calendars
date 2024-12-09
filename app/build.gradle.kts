@@ -76,6 +76,9 @@ dependencies {
     // Serialization
     implementation(libs.kotlin.serialization.json)
 
+    // Data storage
+    implementation(libs.androidx.datastore)
+
     // Other
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

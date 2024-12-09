@@ -11,7 +11,7 @@ object RouteHandler {
     fun NavGraphBuilder.routes(navController: NavController) {
         composable<Routes.Calendars> {
             CalendarsScreen(
-                onCalendarClick = { month, year ->
+                onCalendarSelect = { month, year ->
                     navController.navigate(Routes.CalendarExport(month, year))
                 },
             )

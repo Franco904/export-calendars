@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,10 @@ fun DropdownField(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var selectedItem by rememberSaveable { mutableStateOf(defaultItem) }
+
+    LaunchedEffect(defaultItem) {
+        selectedItem = defaultItem
+    }
 
     ExposedDropdownMenuBox(
         expanded = isExpanded,
@@ -62,6 +67,7 @@ fun DropdownField(
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.background,
                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.outlineVariant,
             ),
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)

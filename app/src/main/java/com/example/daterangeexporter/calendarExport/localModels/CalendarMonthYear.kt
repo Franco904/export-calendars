@@ -1,4 +1,4 @@
-package com.example.daterangeexporter.core.composeModels
+package com.example.daterangeexporter.calendarExport.localModels
 
 import androidx.compose.runtime.Stable
 

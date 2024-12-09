@@ -8,6 +8,7 @@ composeBom = "2024.09.03"
 kotlinCollectionsImmutable = "0.3.7"
 navigationCompose = "2.8.2"
 serialization = "1.6.3"
+datastorePreferences = "1.1.1"
 
 # Plugins
 agp = "8.6.1"
@@ -29,6 +30,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastorePreferences" }
 
 kotlin-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
 kotlin-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
