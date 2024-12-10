@@ -172,7 +172,7 @@ fun CalendarExportTopBar(
                 text = "Calendário",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = 8.dp)
             )
         },
         navigationIcon = {
