@@ -3,6 +3,9 @@ package com.example.daterangeexporter.core.composables
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -17,12 +20,17 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -32,10 +40,14 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import com.example.daterangeexporter.calendarExport.localComposables.CalendarDropDownMenu
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
 import kotlinx.coroutines.launch
@@ -47,40 +59,66 @@ fun BaseCalendar(
     year: Int,
     modifier: Modifier = Modifier,
     showYearLabel: Boolean = true,
-    showRippleOnCardClick: Boolean = false,
     selectedDates: List<String> = emptyList(),
     hasTheStartDate: Boolean = false,
     hasTheEndDate: Boolean = false,
-    onBeforeCardSelect: suspend () -> Unit = {},
-    onCardSelect: (ImageBitmap) -> Unit = {},
+    hasDropDownMenu: Boolean = false,
+    onCardSelect: () -> Unit = {},
+    onBeforeExportCalendar: suspend () -> Unit = {},
+    onExportCalendar: (ImageBitmap) -> Unit = {},
 ) {
+    val density = LocalDensity.current
+
     val graphicsLayer = rememberGraphicsLayer()
     val coroutineScope = rememberCoroutineScope()
 
-    val monthLabel = CalendarUtils.getMonthLabelByNumber(monthNumber = month)
-    val daysOfWeekLabels = listOf("D", "S", "T", "Q", "Q", "S", "S")
+    val monthLabel by remember { mutableStateOf(CalendarUtils.getMonthLabelByNumber(monthNumber = month)) }
+    val daysOfWeekLabels by remember { mutableStateOf(listOf("D", "S", "T", "Q", "Q", "S", "S")) }
 
-    val numberOfDaysOfMonth = CalendarUtils.getNumberOfDaysOfMonth(month, year)
-    val firstDayOfWeek = CalendarUtils.getFirstDayOfWeekOfMonth(month, year)
+    val numberOfDaysOfMonth by remember {
+        mutableIntStateOf(
+            CalendarUtils.getNumberOfDaysOfMonth(
+                month,
+                year
+            )
+        )
+    }
+    val firstDayOfWeek by remember {
+        mutableIntStateOf(
+            CalendarUtils.getFirstDayOfWeekOfMonth(
+                month,
+                year
+            )
+        )
+    }
 
     val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
 
+    var isDropDownVisible by remember { mutableStateOf(false) }
+
+    var pointerOffset by remember { mutableStateOf(DpOffset(0.dp, 0.dp)) }
+    var cardHeight by remember { mutableStateOf(0.dp) }
+
     CalendarCard(
-        onSelect = {
-            coroutineScope.launch {
-                onBeforeCardSelect()
+        onSelect = { offset ->
+            pointerOffset = DpOffset(
+                x = offset.x,
+                y = offset.y - cardHeight,
+            )
 
-                // Save a screenshot of the selected calendar composable
-                val imageBitmap = graphicsLayer.toImageBitmap()
+            onCardSelect()
 
-                onCardSelect(imageBitmap)
+            if (hasDropDownMenu && !isDropDownVisible) {
+                isDropDownVisible = true
             }
         },
-        showRippleOnCardClick = showRippleOnCardClick,
         modifier = modifier
             .drawWithContent {
                 graphicsLayer.record { this@drawWithContent.drawContent() }
                 drawLayer(graphicsLayer)
+            }
+            .onGloballyPositioned {
+                cardHeight = with(density) { it.size.height.toDp() }
             }
     ) {
         Column(
@@ -105,46 +143,64 @@ fun BaseCalendar(
                 hasTheEndDate = hasTheEndDate,
             )
         }
+        CalendarDropDownMenu(
+            isVisible = isDropDownVisible,
+            offset = pointerOffset,
+            onDismiss = { isDropDownVisible = false },
+            onExportCalendar = {
+                coroutineScope.launch {
+                    onBeforeExportCalendar()
+
+                    // Save a screenshot of the selected calendar composable
+                    val imageBitmap = graphicsLayer.toImageBitmap()
+
+                    onExportCalendar(imageBitmap)
+                }
+
+                isDropDownVisible = false
+            },
+            modifier = Modifier
+        )
     }
 }
 
 @Composable
 fun CalendarCard(
-    onSelect: () -> Unit,
-    showRippleOnCardClick: Boolean,
+    onSelect: (DpOffset) -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
-    if (showRippleOnCardClick) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = MaterialTheme.shapes.small,
-            onClick = onSelect,
-            modifier = modifier
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = MaterialTheme.shapes.small,
-                )
-        ) {
-            content()
-        }
-    } else {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = MaterialTheme.shapes.small,
-            modifier = modifier
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = MaterialTheme.shapes.small,
-                )
-                .pointerInput(Unit) {
-                    detectTapGestures {
-                        onSelect()
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = MaterialTheme.shapes.small,
+            )
+            .indication(interactionSource, ripple())
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = { offset ->
+                        val pressInteraction = PressInteraction.Press(offset)
+                        interactionSource.emit(pressInteraction)
+
+                        tryAwaitRelease()
+                        interactionSource.emit(PressInteraction.Release(pressInteraction))
+
+                        val dpOffset = DpOffset(
+                            offset.x.toDp(),
+                            offset.y.toDp(),
+                        )
+                        onSelect(dpOffset)
                     }
-                }
-        ) {
+                )
+            }
+    ) {
+        Column {
             content()
         }
     }

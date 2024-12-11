@@ -175,7 +175,6 @@ fun LazyListScope.calendarsContent(
                 month = month,
                 year = selectedYear,
                 showYearLabel = false,
-                showRippleOnCardClick = true,
                 onCardSelect = {
                     onCalendarSelect(month, selectedYear)
                 },
@@ -193,7 +192,6 @@ fun LazyListScope.calendarsContent(
                 month = month,
                 year = selectedYear,
                 showYearLabel = false,
-                showRippleOnCardClick = true,
                 onCardSelect = {
                     onCalendarSelect(month, selectedYear)
                 },

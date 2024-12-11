@@ -2,7 +2,6 @@ package com.example.daterangeexporter.calendarExport
 
 import android.content.Context
 import android.content.Intent
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -28,6 +28,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,15 +79,18 @@ fun CalendarExportScreen(
         month = selectedMonth,
         year = selectedYear,
     )
-    var selectedDates by rememberSaveable {
-        mutableStateOf<Map<CalendarMonthYear, List<String>>>(mapOf(initialCalendar to emptyList()))
-    }
+    val emptySelectedDates: Map<CalendarMonthYear, List<String>> =
+        mapOf(initialCalendar to emptyList())
+
+    var selectedDates by rememberSaveable { mutableStateOf(emptySelectedDates) }
 
     Scaffold(
         topBar = {
             CalendarExportTopBar(
                 onUpNavigation = onUpNavigation,
                 onEditCalendar = { mustShowDateRangePickerDialog = true },
+                onClearSelectedDates = { selectedDates = emptySelectedDates },
+                isSelectedDatesEmpty = selectedDates.entries.first().value.isEmpty(),
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -119,6 +123,7 @@ fun CalendarExportScreen(
                         onDismiss = {
                             mustShowDateRangePickerDialog = false
                         },
+                        isDateSelectionEmpty = selectedDates == emptySelectedDates,
                     )
                 }
             }
@@ -128,11 +133,10 @@ fun CalendarExportScreen(
             ) { i, (calendarMonthYear, dates) ->
                 val onBeforeCalendarSelect: suspend () -> Unit = {
                     lazyListState.animateScrollToItem(i)
-                    lazyListState.scrollBy(4f)
                     delay(250.milliseconds)
                 }
 
-                val onCalendarSelect: (ImageBitmap) -> Unit = { imageBitmap: ImageBitmap ->
+                val onExportCalendar: (ImageBitmap) -> Unit = { imageBitmap: ImageBitmap ->
                     coroutineScope.launch {
                         // Export to other apps in the device
                         context.exportCalendarImage(imageBitmap)
@@ -147,9 +151,10 @@ fun CalendarExportScreen(
                     year = calendarMonthYear.year,
                     hasTheStartDate = calendarMonthYear == selectedDates.keys.first(),
                     hasTheEndDate = calendarMonthYear == selectedDates.keys.last(),
+                    hasDropDownMenu = true,
                     selectedDates = dates,
-                    onBeforeCardSelect = onBeforeCalendarSelect,
-                    onCardSelect = onCalendarSelect,
+                    onBeforeExportCalendar = onBeforeCalendarSelect,
+                    onExportCalendar = onExportCalendar,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -162,6 +167,8 @@ fun CalendarExportScreen(
 fun CalendarExportTopBar(
     onUpNavigation: () -> Boolean,
     onEditCalendar: () -> Unit,
+    onClearSelectedDates: () -> Unit,
+    isSelectedDatesEmpty: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val outlineVariantColor = MaterialTheme.colorScheme.outlineVariant
@@ -185,12 +192,22 @@ fun CalendarExportTopBar(
             }
         },
         actions = {
-            IconButton(onClick = onEditCalendar) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Editar calendário",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
+            if (isSelectedDatesEmpty) {
+                IconButton(onClick = onEditCalendar) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar calendário",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            } else {
+                IconButton(onClick = onClearSelectedDates) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Limpar seleção de datas",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -214,6 +231,7 @@ fun DateRangePickerModal(
     initialCalendar: CalendarMonthYear,
     onDateRangeSelected: (Pair<Long?, Long?>) -> Unit,
     onDismiss: () -> Unit,
+    isDateSelectionEmpty: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val dateRangePickerState = rememberDateRangePickerState(
@@ -222,6 +240,15 @@ fun DateRangePickerModal(
             year = initialCalendar.year,
         )
     )
+
+    LaunchedEffect(isDateSelectionEmpty) {
+        if (isDateSelectionEmpty) {
+            dateRangePickerState.setSelection(
+                startDateMillis = null,
+                endDateMillis = null,
+            )
+        }
+    }
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
