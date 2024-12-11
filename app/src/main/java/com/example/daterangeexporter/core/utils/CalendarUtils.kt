@@ -1,6 +1,8 @@
 package com.example.daterangeexporter.core.utils
 
+import android.content.Context
 import android.icu.util.Calendar
+import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import java.time.LocalDate
 import java.time.YearMonth
@@ -8,21 +10,23 @@ import java.util.TimeZone
 
 object CalendarUtils {
     private val months = mapOf(
-        1 to "JANEIRO",
-        2 to "FEVEREIRO",
-        3 to "MARÇO",
-        4 to "ABRIL",
-        5 to "MAIO",
-        6 to "JUNHO",
-        7 to "JULHO",
-        8 to "AGOSTO",
-        9 to "SETEMBRO",
-        10 to "OUTUBRO",
-        11 to "NOVEMBRO",
-        12 to "DEZEMBRO",
+        1 to R.string.january_label,
+        2 to R.string.february_label,
+        3 to R.string.march_label,
+        4 to R.string.april_label,
+        5 to R.string.may_label,
+        6 to R.string.june_label,
+        7 to R.string.july_label,
+        8 to R.string.august_label,
+        9 to R.string.september_label,
+        10 to R.string.october_label,
+        11 to R.string.november_label,
+        12 to R.string.december_label,
     )
 
-    fun getMonthLabelByNumber(monthNumber: Int) = months[monthNumber] ?: "JANEIRO"
+    fun Context.getMonthLabelByNumber(monthNumber: Int): String {
+        return getString(months[monthNumber] ?: R.string.january_label)
+    }
 
     fun getNextYears(): List<Int> {
         val currentYear = getCurrentYear()

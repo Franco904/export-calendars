@@ -21,7 +21,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -32,9 +31,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.edit
+import com.example.daterangeexporter.R
 import com.example.daterangeexporter.core.composables.BaseCalendar
 import com.example.daterangeexporter.core.composables.DropdownField
 import com.example.daterangeexporter.core.constants.DEFAULT_SELECTED_YEAR
@@ -58,7 +59,7 @@ fun CalendarsScreen(
 
     var selectedYear by rememberSaveable { mutableIntStateOf(DEFAULT_SELECTED_YEAR) }
 
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         context.dataStore.data.first()[SELECTED_YEAR]?.let { storedSelectedYear ->
@@ -126,7 +127,7 @@ fun CalendarsTopBar(
     TopAppBar(
         title = {
             Text(
-                text = "Calendários",
+                text = stringResource(R.string.calendars_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -154,7 +155,7 @@ fun LazyListScope.calendarsContent(
     item {
         Spacer(modifier = Modifier.height(16.dp))
         DropdownField(
-            placeholderText = "Ano",
+            placeholderText = stringResource(R.string.year_dropdown_field_placeholder),
             items = CalendarUtils.getNextYears().map { it.toString() }.toPersistentList(),
             onItemSelect = { year -> onYearSelect(year.toInt()) },
             defaultItem = selectedYear.toString(),

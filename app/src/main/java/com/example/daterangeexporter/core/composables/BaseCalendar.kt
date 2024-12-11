@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,17 +40,29 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarDropDownMenu
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
+import com.example.daterangeexporter.core.utils.CalendarUtils.getMonthLabelByNumber
 import kotlinx.coroutines.launch
 
+private val daysOfWeek = listOf(
+    R.string.sunday_label,
+    R.string.monday_label,
+    R.string.tuesday_label,
+    R.string.wednesday_label,
+    R.string.thursday_label,
+    R.string.friday_label,
+    R.string.saturday_label,
+)
 
 @Composable
 fun BaseCalendar(
@@ -67,16 +78,17 @@ fun BaseCalendar(
     onBeforeExportCalendar: suspend () -> Unit = {},
     onExportCalendar: (ImageBitmap) -> Unit = {},
 ) {
+    val context = LocalContext.current
     val density = LocalDensity.current
 
     val graphicsLayer = rememberGraphicsLayer()
     val coroutineScope = rememberCoroutineScope()
 
-    val monthLabel = CalendarUtils.getMonthLabelByNumber(monthNumber = month)
+    val monthLabel = context.getMonthLabelByNumber(monthNumber = month)
     val numberOfDaysOfMonth = CalendarUtils.getNumberOfDaysOfMonth(month, year)
     val firstDayOfWeek = CalendarUtils.getFirstDayOfWeekOfMonth(month, year)
 
-    val daysOfWeekLabels by remember { mutableStateOf(listOf("D", "S", "T", "Q", "Q", "S", "S")) }
+    val daysOfWeekLabels by remember { mutableStateOf(daysOfWeek.map { context.getString(it) }) }
     val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
 
     var isDropDownVisible by remember { mutableStateOf(false) }

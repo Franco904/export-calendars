@@ -16,7 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.daterangeexporter.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +34,7 @@ fun CalendarExportTopBar(
     TopAppBar(
         title = {
             Text(
-                text = "Calendário",
+                text = stringResource(R.string.export_calendar_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 8.dp)
@@ -52,7 +54,7 @@ fun CalendarExportTopBar(
                 IconButton(onClick = onEditCalendar) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar calendário",
+                        contentDescription = stringResource(R.string.edit_calendar_selected_dates_action_text),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -60,7 +62,7 @@ fun CalendarExportTopBar(
                 IconButton(onClick = onClearSelectedDates) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Limpar seleção de datas",
+                        contentDescription = stringResource(R.string.clear_calendar_selected_dates_action_text),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }

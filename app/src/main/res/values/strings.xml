@@ -1,3 +1,40 @@
 <resources>
+    <!--  App general  -->
     <string name="app_name">Exportar calendário</string>
+
+    <!--  Calendars  -->
+    <string name="calendars_title">Calendários</string>
+    <string name="year_dropdown_field_placeholder">Ano</string>
+
+    <string name="january_label">JANEIRO</string>
+    <string name="february_label">FEVEREIRO</string>
+    <string name="march_label">MARÇO</string>
+    <string name="april_label">ABRIL</string>
+    <string name="may_label">MAIO</string>
+    <string name="june_label">JUNHO</string>
+    <string name="july_label">JULHO</string>
+    <string name="august_label">AGOSTO</string>
+    <string name="september_label">SETEMBRO</string>
+    <string name="october_label">OUTUBRO</string>
+    <string name="november_label">NOVEMBRO</string>
+    <string name="december_label">DEZEMBRO</string>
+
+    <string name="sunday_label">D</string>
+    <string name="monday_label">S</string>
+    <string name="tuesday_label">T</string>
+    <string name="wednesday_label">Q</string>
+    <string name="thursday_label">Q</string>
+    <string name="friday_label">S</string>
+    <string name="saturday_label">S</string>
+
+    <!--  Calendar export  -->
+    <string name="export_calendar_action_content_description">Exportar calendário</string>
+    <string name="export_calendar_action_text">Compartilhar</string>
+    <string name="export_calendar_title">Calendário</string>
+    <string name="edit_calendar_selected_dates_action_text">Editar calendário</string>
+    <string name="clear_calendar_selected_dates_action_text">Limpar seleção de datas</string>
+    <string name="date_range_picker_dialog_title">Selecione o período da estadia</string>
+    <string name="date_range_picker_dialog_ok_button">OK</string>
+    <string name="date_range_picker_dialog_cancel_button">Cancelar</string>
+
 </resources>

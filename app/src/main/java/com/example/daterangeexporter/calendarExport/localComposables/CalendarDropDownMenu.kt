@@ -10,9 +10,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.example.daterangeexporter.R
 import com.example.daterangeexporter.core.theme.AppTheme
 
 @Composable
@@ -34,13 +36,13 @@ fun CalendarDropDownMenu(
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Share,
-                    contentDescription = "Exportar calendário",
+                    contentDescription = stringResource(R.string.export_calendar_action_content_description),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             },
             text = {
                 Text(
-                    text = "Compartilhar",
+                    text = stringResource(R.string.export_calendar_action_text),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .padding(end = 8.dp)

@@ -4,31 +4,13 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DateRangePicker
-import androidx.compose.material3.DateRangePickerDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,9 +18,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -49,7 +28,7 @@ import androidx.core.os.bundleOf
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarExportTopBar
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import com.example.daterangeexporter.core.composables.BaseCalendar
-import com.example.daterangeexporter.core.composables.DateRangePickerModal
+import com.example.daterangeexporter.core.composables.DateRangePickerDialog
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.deleteAllFiles
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.saveImage
 import com.example.daterangeexporter.core.theme.AppTheme
@@ -109,13 +88,13 @@ fun CalendarExportScreen(
         ) {
             if (mustShowDateRangePickerDialog) {
                 item {
-                    DateRangePickerModal(
+                    DateRangePickerDialog(
                         initialCalendar = initialCalendar,
                         onDateRangeSelected = { (startDateTimeMillis, endDateTimeMillis) ->
                             mustShowDateRangePickerDialog = false
 
                             if (startDateTimeMillis == null || endDateTimeMillis == null) {
-                                return@DateRangePickerModal
+                                return@DateRangePickerDialog
                             }
 
                             selectedDates = CalendarUtils.getDatesGroupedByMonthAndYear(
@@ -172,8 +151,8 @@ private fun Context.exportCalendarImage(bitmap: ImageBitmap) {
     val file = saveImage(bitmap.asAndroidBitmap(), fileName = "calendar-$currentTimestamp.png")
 
     val contentUri = FileProvider.getUriForFile(
-        this,
-        "${packageName}.fileprovider",
+        this, // context
+        "${packageName}.fileprovider", // authority of the file provider
         file
     )
 
