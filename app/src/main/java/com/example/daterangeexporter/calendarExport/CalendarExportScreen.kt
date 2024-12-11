@@ -46,8 +46,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.os.bundleOf
+import com.example.daterangeexporter.calendarExport.localComposables.CalendarExportTopBar
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import com.example.daterangeexporter.core.composables.BaseCalendar
+import com.example.daterangeexporter.core.composables.DateRangePickerModal
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.deleteAllFiles
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.saveImage
 import com.example.daterangeexporter.core.theme.AppTheme
@@ -69,6 +71,7 @@ fun CalendarExportScreen(
     onUpNavigation: () -> Boolean = { true },
 ) {
     val context = LocalContext.current
+
     val coroutineScope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
@@ -159,145 +162,6 @@ fun CalendarExportScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CalendarExportTopBar(
-    onUpNavigation: () -> Boolean,
-    onEditCalendar: () -> Unit,
-    onClearSelectedDates: () -> Unit,
-    isSelectedDatesEmpty: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val outlineVariantColor = MaterialTheme.colorScheme.outlineVariant
-
-    TopAppBar(
-        title = {
-            Text(
-                text = "Calendário",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = { onUpNavigation() }) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-        },
-        actions = {
-            if (isSelectedDatesEmpty) {
-                IconButton(onClick = onEditCalendar) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar calendário",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            } else {
-                IconButton(onClick = onClearSelectedDates) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Limpar seleção de datas",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-        ),
-        modifier = modifier
-            .drawBehind {
-                drawLine(
-                    color = outlineVariantColor,
-                    start = Offset(x = 0f, y = size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 2.dp.toPx(),
-                )
-            }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DateRangePickerModal(
-    initialCalendar: CalendarMonthYear,
-    onDateRangeSelected: (Pair<Long?, Long?>) -> Unit,
-    onDismiss: () -> Unit,
-    isDateSelectionEmpty: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val dateRangePickerState = rememberDateRangePickerState(
-        initialDisplayedMonthMillis = CalendarUtils.getMonthTimestamp(
-            month = initialCalendar.month,
-            year = initialCalendar.year,
-        )
-    )
-
-    LaunchedEffect(isDateSelectionEmpty) {
-        if (isDateSelectionEmpty) {
-            dateRangePickerState.setSelection(
-                startDateMillis = null,
-                endDateMillis = null,
-            )
-        }
-    }
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDateRangeSelected(
-                        Pair(
-                            dateRangePickerState.selectedStartDateMillis,
-                            dateRangePickerState.selectedEndDateMillis
-                        )
-                    )
-                    onDismiss()
-                }
-            ) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        },
-        modifier = modifier
-    ) {
-        DateRangePicker(
-            state = dateRangePickerState,
-            title = {
-                Text(
-                    text = "Selecione o período da estadia",
-                    modifier = Modifier
-                        .padding(16.dp)
-                )
-            },
-            headline = {
-                DateRangePickerDefaults.DateRangePickerHeadline(
-                    selectedStartDateMillis = dateRangePickerState.selectedStartDateMillis,
-                    selectedEndDateMillis = dateRangePickerState.selectedEndDateMillis,
-                    displayMode = dateRangePickerState.displayMode,
-                    dateFormatter = DatePickerDefaults.dateFormatter(),
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .scale(0.9f)
-                )
-            },
-            showModeToggle = true,
-            modifier = Modifier
-                .fillMaxWidth()
-        )
     }
 }
 
