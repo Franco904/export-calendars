@@ -44,8 +44,10 @@ import com.example.daterangeexporter.core.infra.dataStore
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun CalendarsScreen(
@@ -59,12 +61,14 @@ fun CalendarsScreen(
 
     var selectedYear by rememberSaveable { mutableIntStateOf(DEFAULT_SELECTED_YEAR) }
 
-    var isLoading by rememberSaveable { mutableStateOf(false) }
+    var isLoading by rememberSaveable { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         context.dataStore.data.first()[SELECTED_YEAR]?.let { storedSelectedYear ->
             selectedYear = storedSelectedYear
         }
+
+        delay(150.milliseconds)
         isLoading = false
     }
 

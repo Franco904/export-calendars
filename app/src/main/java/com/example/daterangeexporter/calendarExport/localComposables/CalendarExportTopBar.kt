@@ -1,5 +1,12 @@
 package com.example.daterangeexporter.calendarExport.localComposables
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -50,19 +57,25 @@ fun CalendarExportTopBar(
             }
         },
         actions = {
-            if (isSelectedDatesEmpty) {
-                IconButton(onClick = onEditCalendar) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.edit_calendar_selected_dates_action_text),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
+            AnimatedContent(
+                targetState = isSelectedDatesEmpty,
+                label = "isSelectedDatesEmpty",
+                transitionSpec = {
+                    (fadeIn(tween(300)) + scaleIn(initialScale = 0.8f)) togetherWith
+                            (fadeOut(tween(300)) + scaleOut(targetScale = 0.8f))
                 }
-            } else {
-                IconButton(onClick = onClearSelectedDates) {
+            ) { isEmpty ->
+                val icon = if (isEmpty) Icons.Default.Edit else Icons.Default.Close
+                val contentDescription = if (isEmpty) {
+                    R.string.edit_calendar_selected_dates_action_text
+                } else R.string.clear_calendar_selected_dates_action_text
+
+                IconButton(
+                    onClick = if (isEmpty) onEditCalendar else onClearSelectedDates,
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.clear_calendar_selected_dates_action_text),
+                        imageVector = icon,
+                        contentDescription = stringResource(contentDescription),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }

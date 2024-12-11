@@ -1,5 +1,6 @@
 package com.example.daterangeexporter.core.composables
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -20,8 +21,10 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -32,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -169,8 +173,10 @@ fun CalendarCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
         shape = MaterialTheme.shapes.small,
         modifier = modifier
             .border(
@@ -178,20 +184,23 @@ fun CalendarCard(
                 color = MaterialTheme.colorScheme.outlineVariant,
                 shape = MaterialTheme.shapes.small,
             )
+            .clip(RoundedCornerShape(8.dp))
             .indication(interactionSource, ripple())
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = { offset ->
                         val pressInteraction = PressInteraction.Press(offset)
-                        interactionSource.emit(pressInteraction)
 
+                        interactionSource.emit(pressInteraction)
                         tryAwaitRelease()
                         interactionSource.emit(PressInteraction.Release(pressInteraction))
-
+                    },
+                    onTap = { offset ->
                         val dpOffset = DpOffset(
                             offset.x.toDp(),
                             offset.y.toDp(),
                         )
+
                         onSelect(dpOffset)
                     }
                 )
@@ -297,7 +306,7 @@ fun CalendarDate(
         modifier = modifier
             .offset(y = if (isSelected) (-5.5).dp else 0.dp)
     ) {
-        if (isSelected) {
+        AnimatedVisibility(isSelected) {
             SelectedDateCircle(
                 isStartSelectedDay = isStartSelectedDay,
                 isEndSelectedDay = isEndSelectedDay,
