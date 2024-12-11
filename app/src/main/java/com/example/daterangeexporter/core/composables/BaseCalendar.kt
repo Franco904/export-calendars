@@ -72,26 +72,11 @@ fun BaseCalendar(
     val graphicsLayer = rememberGraphicsLayer()
     val coroutineScope = rememberCoroutineScope()
 
-    val monthLabel by remember { mutableStateOf(CalendarUtils.getMonthLabelByNumber(monthNumber = month)) }
+    val monthLabel = CalendarUtils.getMonthLabelByNumber(monthNumber = month)
+    val numberOfDaysOfMonth = CalendarUtils.getNumberOfDaysOfMonth(month, year)
+    val firstDayOfWeek = CalendarUtils.getFirstDayOfWeekOfMonth(month, year)
+
     val daysOfWeekLabels by remember { mutableStateOf(listOf("D", "S", "T", "Q", "Q", "S", "S")) }
-
-    val numberOfDaysOfMonth by remember {
-        mutableIntStateOf(
-            CalendarUtils.getNumberOfDaysOfMonth(
-                month,
-                year
-            )
-        )
-    }
-    val firstDayOfWeek by remember {
-        mutableIntStateOf(
-            CalendarUtils.getFirstDayOfWeekOfMonth(
-                month,
-                year
-            )
-        )
-    }
-
     val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
 
     var isDropDownVisible by remember { mutableStateOf(false) }
