@@ -42,8 +42,6 @@ fun CalendarLabelAssignDialog(
         R.string.calendar_label_assign_dialog_title_rename
     } else R.string.calendar_label_assign_dialog_title_assign
 
-    BackHandler { onCancel() }
-
     LaunchedEffect(input) {
         labelInput = input
     }
