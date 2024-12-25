@@ -1,6 +1,5 @@
 package com.example.daterangeexporter.calendarExport.localComposables
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -18,9 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.daterangeexporter.R
 import com.example.daterangeexporter.core.theme.AppTheme
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun CalendarLabelAssignDialog(
@@ -36,12 +39,21 @@ fun CalendarLabelAssignDialog(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var labelInput by rememberSaveable { mutableStateOf(input) }
+    val fieldFocusRequester = remember { FocusRequester() }
+
+    var labelInput by remember { mutableStateOf(input) }
 
     val titleResId = if (!input.isNullOrBlank()) {
         R.string.calendar_label_assign_dialog_title_rename
     } else R.string.calendar_label_assign_dialog_title_assign
 
+    // runs after the composition
+    LaunchedEffect(Unit) {
+        delay(250.milliseconds)
+        fieldFocusRequester.requestFocus()
+    }
+
+    // runs during the composition and whenever "input" value changes
     LaunchedEffect(input) {
         labelInput = input
     }
@@ -83,6 +95,7 @@ fun CalendarLabelAssignDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
+                    .focusRequester(fieldFocusRequester)
             )
         },
         confirmButton = {
