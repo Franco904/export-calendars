@@ -5,7 +5,6 @@ import android.icu.util.Calendar
 import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.time.LocalDate
 import java.time.YearMonth

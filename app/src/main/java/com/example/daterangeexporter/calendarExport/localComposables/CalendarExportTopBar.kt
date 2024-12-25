@@ -1,17 +1,10 @@
 package com.example.daterangeexporter.calendarExport.localComposables
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,6 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -33,10 +30,14 @@ fun CalendarExportTopBar(
     onUpNavigation: () -> Boolean,
     onEditCalendar: () -> Unit,
     onClearSelectedDates: () -> Unit,
+    onLabelAssign: () -> Unit,
     isSelectedDatesEmpty: Boolean,
+    calendarHasLabelAssigned: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val outlineVariantColor = MaterialTheme.colorScheme.outlineVariant
+
+    var isMenuDropDownVisible by remember { mutableStateOf(false) }
 
     TopAppBar(
         title = {
@@ -57,28 +58,36 @@ fun CalendarExportTopBar(
             }
         },
         actions = {
-            AnimatedContent(
-                targetState = isSelectedDatesEmpty,
-                label = "isSelectedDatesEmpty",
-                transitionSpec = {
-                    (fadeIn(tween(300)) + scaleIn(initialScale = 0.8f)) togetherWith
-                            (fadeOut(tween(300)) + scaleOut(targetScale = 0.8f))
-                }
-            ) { isEmpty ->
-                val icon = if (isEmpty) Icons.Default.Edit else Icons.Default.Close
-                val contentDescription = if (isEmpty) {
-                    R.string.edit_calendar_selected_dates_action_text
-                } else R.string.clear_calendar_selected_dates_action_text
-
+            Column {
                 IconButton(
-                    onClick = if (isEmpty) onEditCalendar else onClearSelectedDates,
+                    onClick = { isMenuDropDownVisible = true },
                 ) {
                     Icon(
-                        imageVector = icon,
-                        contentDescription = stringResource(contentDescription),
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.more_options_action_content_description),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
+                CalendarExportTopBarDropDownMenu(
+                    isVisible = isMenuDropDownVisible,
+                    hasDatesSelected = !isSelectedDatesEmpty,
+                    hasLabelAssigned = calendarHasLabelAssigned,
+                    onDatesSelect = {
+                        if (isSelectedDatesEmpty) {
+                            onEditCalendar()
+                        } else {
+                            onClearSelectedDates()
+                        }
+
+                        isMenuDropDownVisible = false
+                    },
+                    onLabelAssign = {
+                        onLabelAssign()
+
+                        isMenuDropDownVisible = false
+                    },
+                    onDismiss = { isMenuDropDownVisible = false },
+                )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

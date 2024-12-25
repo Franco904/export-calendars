@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -28,16 +29,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,14 +56,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarDropDownMenu
+import com.example.daterangeexporter.calendarExport.localComposables.ClientNameLabelChip
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
 import com.example.daterangeexporter.core.utils.CalendarUtils.getMonthLabelByNumber
 import com.example.daterangeexporter.core.utils.snapshotStateListSaver
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
@@ -81,6 +79,7 @@ fun BaseCalendar(
     hasTheEndDate: Boolean = false,
     hasDropDownMenu: Boolean = false,
     onCardSelect: () -> Unit = {},
+    label: String? = null,
     onBeforeExportCalendar: suspend () -> Unit = {},
     onExportCalendar: (ImageBitmap) -> Unit = {},
 ) {
@@ -91,8 +90,22 @@ fun BaseCalendar(
     val coroutineScope = rememberCoroutineScope()
 
     val monthLabel by rememberSaveable { mutableStateOf(context.getMonthLabelByNumber(monthNumber = month)) }
-    val numberOfDaysOfMonth by rememberSaveable { mutableIntStateOf(CalendarUtils.getNumberOfDaysOfMonth(month, year)) }
-    val firstDayOfWeek by rememberSaveable { mutableIntStateOf(CalendarUtils.getFirstDayOfWeekOfMonth(month, year)) }
+    val numberOfDaysOfMonth by rememberSaveable {
+        mutableIntStateOf(
+            CalendarUtils.getNumberOfDaysOfMonth(
+                month,
+                year
+            )
+        )
+    }
+    val firstDayOfWeek by rememberSaveable {
+        mutableIntStateOf(
+            CalendarUtils.getFirstDayOfWeekOfMonth(
+                month,
+                year
+            )
+        )
+    }
 
     val daysOfWeekLabels = rememberSaveable(saver = snapshotStateListSaver()) {
         CalendarUtils.daysOfWeek.map { context.getString(it) }.toMutableStateList()
@@ -101,10 +114,16 @@ fun BaseCalendar(
         List(numberOfDaysOfMonth) { day -> (day + 1).toString() }.toMutableStateList()
     }
 
-    var isDropDownVisible by remember { mutableStateOf(false) }
+    var assignedLabel by rememberSaveable { mutableStateOf(label) }
+
+    var isMenuDropDownVisible by remember { mutableStateOf(false) }
 
     var pointerOffset by remember { mutableStateOf(DpOffset(0.dp, 0.dp)) }
     var cardHeight by remember { mutableStateOf(0.dp) }
+
+    LaunchedEffect(label) {
+        assignedLabel = label
+    }
 
     CalendarCard(
         onSelect = { offset ->
@@ -115,8 +134,8 @@ fun BaseCalendar(
 
             onCardSelect()
 
-            if (hasDropDownMenu && !isDropDownVisible) {
-                isDropDownVisible = true
+            if (hasDropDownMenu && !isMenuDropDownVisible) {
+                isMenuDropDownVisible = true
             }
         },
         modifier = modifier
@@ -131,15 +150,24 @@ fun BaseCalendar(
         Column(
             modifier = modifier
                 .padding(
-                    top = 16.dp,
+                    top = if (!assignedLabel.isNullOrBlank()) 8.dp else 16.dp,
                     end = 16.dp,
                     bottom = 24.dp,
                 )
         ) {
-            MonthLabelSection(
-                monthLabel = monthLabel,
-                year = if (showYearLabel) year else null,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MonthLabelSection(
+                    monthLabel = monthLabel,
+                    year = if (showYearLabel) year else null,
+                    modifier = Modifier
+                        .weight(1f)
+                )
+                AnimatedVisibility(!assignedLabel.isNullOrBlank()) {
+                    ClientNameLabelChip(label = assignedLabel ?: "")
+                }
+            }
             Spacer(modifier = Modifier.height(20.dp))
             DatesSection(
                 daysOfWeekLabels = daysOfWeekLabels.toPersistentList(),
@@ -151,9 +179,9 @@ fun BaseCalendar(
             )
         }
         CalendarDropDownMenu(
-            isVisible = isDropDownVisible,
+            isVisible = isMenuDropDownVisible,
             offset = pointerOffset,
-            onDismiss = { isDropDownVisible = false },
+            onDismiss = { isMenuDropDownVisible = false },
             onExportCalendar = {
                 coroutineScope.launch {
                     onBeforeExportCalendar()
@@ -163,8 +191,6 @@ fun BaseCalendar(
 
                     onExportCalendar(imageBitmap)
                 }
-
-                isDropDownVisible = false
             },
             modifier = Modifier
         )
@@ -369,6 +395,7 @@ fun BaseCalendarPreview(
             hasTheStartDate = true,
             hasTheEndDate = true,
             selectedDates = persistentListOf("27", "28", "29", "30", "31"),
+            label = "Franco Saravia Tavares",
             modifier = modifier,
         )
     }

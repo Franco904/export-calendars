@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.core.os.bundleOf
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarExportTopBar
+import com.example.daterangeexporter.calendarExport.localComposables.CalendarLabelAssignDialog
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import com.example.daterangeexporter.core.composables.BaseCalendar
 import com.example.daterangeexporter.core.composables.DateRangePickerDialog
@@ -52,12 +53,10 @@ fun CalendarExportScreen(
     modifier: Modifier = Modifier,
     onUpNavigation: () -> Boolean = { true },
 ) {
-    val context = LocalContext.current
-
-    val coroutineScope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
     var mustShowDateRangePickerDialog by remember { mutableStateOf(false) }
+    var mustShowLabelAssignDialog by remember { mutableStateOf(false) }
 
     val initialCalendar = CalendarMonthYear(
         id = selectedMonth + selectedYear,
@@ -69,13 +68,17 @@ fun CalendarExportScreen(
 
     var selectedDates by rememberSaveable { mutableStateOf(emptySelectedDates) }
 
+    var calendarLabelInput by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         topBar = {
             CalendarExportTopBar(
                 onUpNavigation = onUpNavigation,
                 onEditCalendar = { mustShowDateRangePickerDialog = true },
                 onClearSelectedDates = { selectedDates = emptySelectedDates },
+                onLabelAssign = { mustShowLabelAssignDialog = true },
                 isSelectedDatesEmpty = selectedDates.entries.first().value.isEmpty(),
+                calendarHasLabelAssigned = !calendarLabelInput.isNullOrBlank(),
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -112,39 +115,76 @@ fun CalendarExportScreen(
                     )
                 }
             }
+            if (mustShowLabelAssignDialog) {
+                item {
+                    CalendarLabelAssignDialog(
+                        input = calendarLabelInput,
+                        onSave = { input ->
+                            calendarLabelInput = input
+                            mustShowLabelAssignDialog = false
+                        },
+                        onCancel = { mustShowLabelAssignDialog = false },
+                    )
+                }
+            }
             itemsIndexed(
                 selectedDates,
                 key = { i, _ -> i },
-            ) { i, (calendarMonthYear, dates) ->
-                val onBeforeCalendarSelect: suspend () -> Unit = {
-                    lazyListState.animateScrollToItem(i)
-                    delay(250.milliseconds)
-                }
-
-                val onExportCalendar: (ImageBitmap) -> Unit = { imageBitmap: ImageBitmap ->
-                    coroutineScope.launch {
-                        // Export to other apps in the device
-                        context.exportCalendarImage(imageBitmap)
-                    }
-                }
-
-                if (i == 0) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-                BaseCalendar(
-                    month = calendarMonthYear.month,
-                    year = calendarMonthYear.year,
+            ) { i, (calendarMonthYear, monthSelectedDates) ->
+                SelectedDatesCalendar(
+                    lazyListState = lazyListState,
+                    index = i,
+                    calendarMonthYear = calendarMonthYear,
+                    monthSelectedDates = monthSelectedDates,
                     hasTheStartDate = calendarMonthYear == selectedDates.keys.first(),
                     hasTheEndDate = calendarMonthYear == selectedDates.keys.last(),
-                    hasDropDownMenu = true,
-                    selectedDates = dates,
-                    onBeforeExportCalendar = onBeforeCalendarSelect,
-                    onExportCalendar = onExportCalendar,
+                    assignedCalendarLabel = calendarLabelInput,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
+}
+
+@Composable
+fun SelectedDatesCalendar(
+    lazyListState: LazyListState,
+    index: Int,
+    calendarMonthYear: CalendarMonthYear,
+    monthSelectedDates: ImmutableList<String>,
+    hasTheStartDate: Boolean,
+    hasTheEndDate: Boolean,
+    assignedCalendarLabel: String?,
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val onBeforeCalendarSelect: suspend () -> Unit = {
+        lazyListState.animateScrollToItem(index)
+        delay(250.milliseconds)
+    }
+
+    val onExportCalendar: (ImageBitmap) -> Unit = { imageBitmap: ImageBitmap ->
+        coroutineScope.launch {
+            // Export to other apps in the device
+            context.exportCalendarImage(imageBitmap)
+        }
+    }
+
+    if (index == 0) {
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+    BaseCalendar(
+        month = calendarMonthYear.month,
+        year = calendarMonthYear.year,
+        hasTheStartDate = hasTheStartDate,
+        hasTheEndDate = hasTheEndDate,
+        hasDropDownMenu = true,
+        selectedDates = monthSelectedDates,
+        label = assignedCalendarLabel,
+        onBeforeExportCalendar = onBeforeCalendarSelect,
+        onExportCalendar = onExportCalendar,
+    )
+    Spacer(modifier = Modifier.height(16.dp))
 }
 
 private fun Context.exportCalendarImage(bitmap: ImageBitmap) {

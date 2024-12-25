@@ -28,13 +28,23 @@
     <string name="saturday_label">S</string>
 
     <!--  Calendar export  -->
+    <string name="more_options_action_content_description">Ver opções</string>
+    <string name="assign_name_calendar_action_text">Adicionar nome</string>
+    <string name="rename_calendar_action_text">Renomear</string>
     <string name="export_calendar_action_content_description">Exportar calendário</string>
     <string name="export_calendar_action_text">Compartilhar</string>
     <string name="export_calendar_title">Calendário</string>
-    <string name="edit_calendar_selected_dates_action_text">Editar calendário</string>
-    <string name="clear_calendar_selected_dates_action_text">Limpar seleção de datas</string>
+    <string name="edit_calendar_selected_dates_action_text">Selecionar datas</string>
+    <string name="clear_calendar_selected_dates_action_text">Limpar seleção</string>
+
     <string name="date_range_picker_dialog_title">Selecione o período da estadia</string>
-    <string name="date_range_picker_dialog_ok_button">OK</string>
-    <string name="date_range_picker_dialog_cancel_button">Cancelar</string>
+    <string name="date_range_picker_dialog_primary_button">OK</string>
+    <string name="date_range_picker_dialog_secondary_button">Cancelar</string>
+
+    <string name="calendar_label_assign_dialog_title_assign">Adicionar nome do cliente</string>
+    <string name="calendar_label_assign_dialog_title_rename">Renomear cliente</string>
+    <string name="calendar_label_assign_dialog_field_placeholder">Nome</string>
+    <string name="calendar_label_assign_dialog_primary_button">Salvar</string>
+    <string name="calendar_label_assign_dialog_secondary_button">Cancelar</string>
 
 </resources>

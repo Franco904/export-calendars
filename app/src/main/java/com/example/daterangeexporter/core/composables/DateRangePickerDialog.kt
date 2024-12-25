@@ -59,12 +59,12 @@ fun DateRangePickerDialog(
                     onDismiss()
                 }
             ) {
-                Text(stringResource(R.string.date_range_picker_dialog_ok_button))
+                Text(stringResource(R.string.date_range_picker_dialog_primary_button))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.date_range_picker_dialog_cancel_button))
+                Text(stringResource(R.string.date_range_picker_dialog_secondary_button))
             }
         },
         modifier = modifier
