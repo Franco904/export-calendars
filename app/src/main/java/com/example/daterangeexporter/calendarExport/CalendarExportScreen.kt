@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,8 @@ import com.example.daterangeexporter.core.utils.CalendarUtils
 import com.example.daterangeexporter.core.utils.IMAGE_PNG_TYPE
 import com.example.daterangeexporter.core.utils.itemsIndexed
 import com.example.daterangeexporter.core.utils.showShareSheet
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -61,8 +64,8 @@ fun CalendarExportScreen(
         month = selectedMonth,
         year = selectedYear,
     )
-    val emptySelectedDates: Map<CalendarMonthYear, List<String>> =
-        mapOf(initialCalendar to emptyList())
+    val emptySelectedDates: Map<CalendarMonthYear, ImmutableList<String>> =
+        mapOf(initialCalendar to persistentListOf())
 
     var selectedDates by rememberSaveable { mutableStateOf(emptySelectedDates) }
 

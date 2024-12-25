@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +20,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -109,7 +111,7 @@ fun CalendarsScreen(
                         selectedYear = year
 
                         coroutineScope.launch {
-                            context.dataStore.edit { prefs -> prefs[SELECTED_YEAR] = year.toInt() }
+                            context.dataStore.edit { prefs -> prefs[SELECTED_YEAR] = year }
                         }
 
                         focusManager.clearFocus()
@@ -158,19 +160,28 @@ fun LazyListScope.calendarsContent(
 ) {
     item {
         Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    item {
         DropdownField(
             placeholderText = stringResource(R.string.year_dropdown_field_placeholder),
             items = CalendarUtils.getNextYears().map { it.toString() }.toPersistentList(),
             onItemSelect = { year -> onYearSelect(year.toInt()) },
             defaultItem = selectedYear.toString(),
         )
+    }
+
+    item {
         Spacer(modifier = Modifier.height(16.dp))
     }
 
     if (selectedYear == CalendarUtils.getCurrentYear()) {
         val currentMonth = CalendarUtils.getCurrentMonth()
 
-        items(12 - currentMonth) { i ->
+        items(
+            key = { i -> i },
+            count = 12 - currentMonth,
+        ) { i ->
             val month = i + currentMonth + 1
 
             if (i == 0) {
@@ -187,7 +198,10 @@ fun LazyListScope.calendarsContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
     } else {
-        items(12) { i ->
+        items(
+            key = { i -> i },
+            count = 12,
+        ) { i ->
             val month = i + 1
 
             if (i == 0) {

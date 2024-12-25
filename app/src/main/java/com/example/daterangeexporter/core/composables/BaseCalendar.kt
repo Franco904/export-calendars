@@ -29,10 +29,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,17 +62,13 @@ import com.example.daterangeexporter.calendarExport.localComposables.CalendarDro
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
 import com.example.daterangeexporter.core.utils.CalendarUtils.getMonthLabelByNumber
+import com.example.daterangeexporter.core.utils.snapshotStateListSaver
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 
-private val daysOfWeek = listOf(
-    R.string.sunday_label,
-    R.string.monday_label,
-    R.string.tuesday_label,
-    R.string.wednesday_label,
-    R.string.thursday_label,
-    R.string.friday_label,
-    R.string.saturday_label,
-)
 
 @Composable
 fun BaseCalendar(
@@ -74,7 +76,7 @@ fun BaseCalendar(
     year: Int,
     modifier: Modifier = Modifier,
     showYearLabel: Boolean = true,
-    selectedDates: List<String> = emptyList(),
+    selectedDates: ImmutableList<String> = persistentListOf(),
     hasTheStartDate: Boolean = false,
     hasTheEndDate: Boolean = false,
     hasDropDownMenu: Boolean = false,
@@ -88,12 +90,16 @@ fun BaseCalendar(
     val graphicsLayer = rememberGraphicsLayer()
     val coroutineScope = rememberCoroutineScope()
 
-    val monthLabel = context.getMonthLabelByNumber(monthNumber = month)
-    val numberOfDaysOfMonth = CalendarUtils.getNumberOfDaysOfMonth(month, year)
-    val firstDayOfWeek = CalendarUtils.getFirstDayOfWeekOfMonth(month, year)
+    val monthLabel by rememberSaveable { mutableStateOf(context.getMonthLabelByNumber(monthNumber = month)) }
+    val numberOfDaysOfMonth by rememberSaveable { mutableIntStateOf(CalendarUtils.getNumberOfDaysOfMonth(month, year)) }
+    val firstDayOfWeek by rememberSaveable { mutableIntStateOf(CalendarUtils.getFirstDayOfWeekOfMonth(month, year)) }
 
-    val daysOfWeekLabels by remember { mutableStateOf(daysOfWeek.map { context.getString(it) }) }
-    val days = List(numberOfDaysOfMonth) { day -> (day + 1).toString() }
+    val daysOfWeekLabels = rememberSaveable(saver = snapshotStateListSaver()) {
+        CalendarUtils.daysOfWeek.map { context.getString(it) }.toMutableStateList()
+    }
+    val days = rememberSaveable(saver = snapshotStateListSaver()) {
+        List(numberOfDaysOfMonth) { day -> (day + 1).toString() }.toMutableStateList()
+    }
 
     var isDropDownVisible by remember { mutableStateOf(false) }
 
@@ -136,9 +142,9 @@ fun BaseCalendar(
             )
             Spacer(modifier = Modifier.height(20.dp))
             DatesSection(
-                daysOfWeekLabels = daysOfWeekLabels,
+                daysOfWeekLabels = daysOfWeekLabels.toPersistentList(),
                 firstDayOfWeek = firstDayOfWeek,
-                days = days,
+                days = days.toPersistentList(),
                 selectedDates = selectedDates,
                 hasTheStartDate = hasTheStartDate,
                 hasTheEndDate = hasTheEndDate,
@@ -232,10 +238,10 @@ fun MonthLabelSection(
 
 @Composable
 fun DatesSection(
-    daysOfWeekLabels: List<String>,
+    daysOfWeekLabels: ImmutableList<String>,
     firstDayOfWeek: Int,
-    days: List<String>,
-    selectedDates: List<String>,
+    days: ImmutableList<String>,
+    selectedDates: ImmutableList<String>,
     hasTheStartDate: Boolean,
     hasTheEndDate: Boolean,
     modifier: Modifier = Modifier,
@@ -362,7 +368,7 @@ fun BaseCalendarPreview(
             year = 2025,
             hasTheStartDate = true,
             hasTheEndDate = true,
-            selectedDates = listOf("27", "28", "29", "30", "31"),
+            selectedDates = persistentListOf("27", "28", "29", "30", "31"),
             modifier = modifier,
         )
     }

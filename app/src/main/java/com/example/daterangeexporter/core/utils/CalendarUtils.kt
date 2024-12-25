@@ -4,11 +4,24 @@ import android.content.Context
 import android.icu.util.Calendar
 import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.TimeZone
 
 object CalendarUtils {
+    val daysOfWeek = listOf(
+        R.string.sunday_label,
+        R.string.monday_label,
+        R.string.tuesday_label,
+        R.string.wednesday_label,
+        R.string.thursday_label,
+        R.string.friday_label,
+        R.string.saturday_label,
+    )
+
     private val months = mapOf(
         1 to R.string.january_label,
         2 to R.string.february_label,
@@ -67,7 +80,7 @@ object CalendarUtils {
     fun getDatesGroupedByMonthAndYear(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
-    ): Map<CalendarMonthYear, List<String>> {
+    ): Map<CalendarMonthYear, ImmutableList<String>> {
         val startDateCalendar = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             .apply { timeInMillis = startDateTimeMillis }
 
@@ -100,7 +113,7 @@ object CalendarUtils {
                 )
             }
             .mapValues { (_, dates) ->
-                dates.map { it.dayOfMonth.toString() }
+                dates.map { it.dayOfMonth.toString() }.toPersistentList()
             }
     }
 }
