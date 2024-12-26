@@ -15,10 +15,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
+import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
+import com.example.daterangeexporter.core.utils.getSelectableDates
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +36,10 @@ fun DateRangePickerDialog(
         initialDisplayedMonthMillis = CalendarUtils.getMonthTimestamp(
             month = initialCalendar.month,
             year = initialCalendar.year,
-        )
+        ),
+        selectableDates = getSelectableDates(
+            initialCalendar = initialCalendar,
+        ),
     )
 
     LaunchedEffect(isDateSelectionEmpty) {
@@ -85,13 +91,28 @@ fun DateRangePickerDialog(
                     displayMode = dateRangePickerState.displayMode,
                     dateFormatter = DatePickerDefaults.dateFormatter(),
                     modifier = Modifier
-                        .padding(4.dp)
+                        .padding(6.dp)
                         .scale(0.9f)
                 )
             },
             showModeToggle = true,
             modifier = Modifier
                 .fillMaxWidth()
+        )
+    }
+}
+
+@Preview
+@Composable
+fun DateRangePickerDialogPreview(
+    modifier: Modifier = Modifier,
+) {
+    AppTheme {
+        DateRangePickerDialog(
+            initialCalendar = CalendarMonthYear(0, 2, 2025),
+            onDateRangeSelected = {},
+            onDismiss = {},
+            isDateSelectionEmpty = false,
         )
     }
 }
