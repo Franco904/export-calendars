@@ -12,11 +12,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -29,6 +30,8 @@ import androidx.core.os.bundleOf
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarExportTopBar
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarLabelAssignDialog
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
+import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
+import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionCount
 import com.example.daterangeexporter.core.composables.BaseCalendar
 import com.example.daterangeexporter.core.composables.DateRangePickerDialog
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.deleteAllFiles
@@ -40,6 +43,7 @@ import com.example.daterangeexporter.core.utils.itemsIndexed
 import com.example.daterangeexporter.core.utils.showShareSheet
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -55,28 +59,38 @@ fun CalendarExportScreen(
 ) {
     val lazyListState = rememberLazyListState()
 
-    var mustShowDateRangePickerDialog by remember { mutableStateOf(false) }
-    var mustShowLabelAssignDialog by remember { mutableStateOf(false) }
+    var rangeSelectionCount by remember { mutableIntStateOf(RangeSelectionCount.FIRST.id) }
 
     val initialCalendar = CalendarMonthYear(
-        id = selectedMonth + selectedYear,
+        id = selectedMonth + selectedYear + rangeSelectionCount,
         month = selectedMonth,
         year = selectedYear,
     )
-    val emptySelectedDates: Map<CalendarMonthYear, ImmutableList<String>> =
+    val emptySelectedDates: Map<CalendarMonthYear, ImmutableList<CalendarSelectedDate>> =
         mapOf(initialCalendar to persistentListOf())
 
-    var selectedDates by rememberSaveable { mutableStateOf(emptySelectedDates) }
+    var selectedDates by remember { mutableStateOf(emptySelectedDates) }
 
     var calendarLabelInput by remember { mutableStateOf<String?>(null) }
+
+
+    var mustShowDateRangePickerDialog by remember { mutableStateOf(false) }
+    var mustShowLabelAssignDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             CalendarExportTopBar(
                 onUpNavigation = onUpNavigation,
-                onEditCalendar = { mustShowDateRangePickerDialog = true },
-                onClearSelectedDates = { selectedDates = emptySelectedDates },
-                onLabelAssign = { mustShowLabelAssignDialog = true },
+                onEditCalendar = {
+                    mustShowDateRangePickerDialog = true
+                },
+                onClearSelectedDates = {
+                    rangeSelectionCount = RangeSelectionCount.FIRST.id
+                    selectedDates = emptySelectedDates
+                },
+                onLabelAssign = {
+                    mustShowLabelAssignDialog = true
+                },
                 isSelectedDatesEmpty = selectedDates.entries.first().value.isEmpty(),
                 calendarHasLabelAssigned = !calendarLabelInput.isNullOrBlank(),
             )
@@ -94,27 +108,55 @@ fun CalendarExportScreen(
         ) {
             if (mustShowDateRangePickerDialog) {
                 item {
-                    DateRangePickerDialog(
-                        initialCalendar = initialCalendar,
-                        onDateRangeSelected = { (startDateTimeMillis, endDateTimeMillis) ->
-                            mustShowDateRangePickerDialog = false
+                    val isDateSelectionEmpty =
+                        selectedDates == emptySelectedDates || rangeSelectionCount >= RangeSelectionCount.SECOND.id
 
+                    DateRangePickerDialog(
+                        initialDayOfMonth = selectedDates.values.last().lastOrNull()?.dayOfMonth
+                            ?: "1",
+                        initialMonthYear = if (rangeSelectionCount == RangeSelectionCount.FIRST.id) {
+                            initialCalendar
+                        } else {
+                            initialCalendar.copy(
+                                month = selectedDates.keys.last().month,
+                                year = selectedDates.keys.last().year,
+                            )
+                        },
+                        onDateRangeSelected = { (startDateTimeMillis, endDateTimeMillis) ->
                             if (startDateTimeMillis == null || endDateTimeMillis == null) {
                                 return@DateRangePickerDialog
                             }
 
-                            selectedDates = CalendarUtils.getDatesGroupedByMonthAndYear(
+                            val newDates = CalendarUtils.getRangeDatesGroupedByMonthAndYear(
                                 startDateTimeMillis = startDateTimeMillis,
                                 endDateTimeMillis = endDateTimeMillis,
                             )
+                                .mapKeys { (monthYear, _) ->
+                                    monthYear.copy(id = monthYear.id + rangeSelectionCount)
+                                }
+                                .mapValues { (_, dates) ->
+                                    dates.map { date ->
+                                        date.copy(
+                                            rangeSelectionCount = RangeSelectionCount.fromId(
+                                                rangeSelectionCount
+                                            )
+                                        )
+                                    }.toPersistentList()
+                                }
+
+                            selectedDates = selectedDates + newDates
+
+                            rangeSelectionCount += 1
+                            mustShowDateRangePickerDialog = false
                         },
                         onDismiss = {
                             mustShowDateRangePickerDialog = false
                         },
-                        isDateSelectionEmpty = selectedDates == emptySelectedDates,
+                        isDateSelectionEmpty = isDateSelectionEmpty,
                     )
                 }
             }
+
             if (mustShowLabelAssignDialog) {
                 item {
                     CalendarLabelAssignDialog(
@@ -123,22 +165,37 @@ fun CalendarExportScreen(
                             calendarLabelInput = input
                             mustShowLabelAssignDialog = false
                         },
-                        onCancel = { mustShowLabelAssignDialog = false },
+                        onCancel = {
+                            mustShowLabelAssignDialog = false
+                        },
                     )
                 }
             }
+
             itemsIndexed(
                 selectedDates,
                 key = { i, _ -> i },
             ) { i, (calendarMonthYear, monthSelectedDates) ->
-                SelectedDatesCalendar(
+                var mustShowAddNewDateRangeMenuOption by remember { mutableStateOf(false) }
+
+                LaunchedEffect(selectedDates) {
+                    val isLastMonth = calendarMonthYear == selectedDates.keys.last()
+                    val hasAnyDateSelected = selectedDates.values.first().isNotEmpty()
+                    val hasReachedMaxSelectionCount =
+                        rangeSelectionCount <= RangeSelectionCount.entries.last().id
+
+                    mustShowAddNewDateRangeMenuOption =
+                        isLastMonth && hasAnyDateSelected && hasReachedMaxSelectionCount
+                }
+
+                SelectableDatesCalendar(
                     lazyListState = lazyListState,
                     index = i,
                     calendarMonthYear = calendarMonthYear,
-                    monthSelectedDates = monthSelectedDates,
-                    hasTheStartDate = calendarMonthYear == selectedDates.keys.first(),
-                    hasTheEndDate = calendarMonthYear == selectedDates.keys.last(),
-                    assignedCalendarLabel = calendarLabelInput,
+                    selectedDatesWithMonthYear = Pair(calendarMonthYear, monthSelectedDates),
+                    assignedClientNameLabel = calendarLabelInput,
+                    mustShowAddNewDateRangeMenuOption = mustShowAddNewDateRangeMenuOption,
+                    onAddNewDateRange = { mustShowDateRangePickerDialog = true }
                 )
             }
         }
@@ -146,29 +203,17 @@ fun CalendarExportScreen(
 }
 
 @Composable
-fun SelectedDatesCalendar(
+fun SelectableDatesCalendar(
     lazyListState: LazyListState,
     index: Int,
     calendarMonthYear: CalendarMonthYear,
-    monthSelectedDates: ImmutableList<String>,
-    hasTheStartDate: Boolean,
-    hasTheEndDate: Boolean,
-    assignedCalendarLabel: String?,
+    selectedDatesWithMonthYear: Pair<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>,
+    assignedClientNameLabel: String?,
+    mustShowAddNewDateRangeMenuOption: Boolean,
+    onAddNewDateRange: () -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
-    val onBeforeCalendarSelect: suspend () -> Unit = {
-        lazyListState.animateScrollToItem(index)
-        delay(250.milliseconds)
-    }
-
-    val onExportCalendar: (ImageBitmap) -> Unit = { imageBitmap: ImageBitmap ->
-        coroutineScope.launch {
-            // Export to other apps in the device
-            context.exportCalendarImage(imageBitmap)
-        }
-    }
 
     if (index == 0) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -176,13 +221,21 @@ fun SelectedDatesCalendar(
     BaseCalendar(
         month = calendarMonthYear.month,
         year = calendarMonthYear.year,
-        hasTheStartDate = hasTheStartDate,
-        hasTheEndDate = hasTheEndDate,
+        clientNameLabel = assignedClientNameLabel,
+        selectedDatesWithMonthYear = selectedDatesWithMonthYear,
         hasDropDownMenu = true,
-        selectedDates = monthSelectedDates,
-        label = assignedCalendarLabel,
-        onBeforeExportCalendar = onBeforeCalendarSelect,
-        onExportCalendar = onExportCalendar,
+        mustShowAddNewDateRangeMenuOption = mustShowAddNewDateRangeMenuOption,
+        onAddNewDateRange = onAddNewDateRange,
+        onBeforeExportCalendar = suspend {
+            lazyListState.animateScrollToItem(index)
+            delay(250.milliseconds)
+        },
+        onExportCalendar = { imageBitmap: ImageBitmap ->
+            coroutineScope.launch {
+                // Export to other apps in the device
+                context.exportCalendarImage(imageBitmap)
+            }
+        },
     )
     Spacer(modifier = Modifier.height(16.dp))
 }

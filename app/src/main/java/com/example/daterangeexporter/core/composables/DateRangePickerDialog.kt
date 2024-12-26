@@ -26,7 +26,8 @@ import com.example.daterangeexporter.core.utils.getSelectableDates
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateRangePickerDialog(
-    initialCalendar: CalendarMonthYear,
+    initialDayOfMonth: String,
+    initialMonthYear: CalendarMonthYear,
     onDateRangeSelected: (Pair<Long?, Long?>) -> Unit,
     onDismiss: () -> Unit,
     isDateSelectionEmpty: Boolean,
@@ -34,11 +35,12 @@ fun DateRangePickerDialog(
 ) {
     val dateRangePickerState = rememberDateRangePickerState(
         initialDisplayedMonthMillis = CalendarUtils.getMonthTimestamp(
-            month = initialCalendar.month,
-            year = initialCalendar.year,
+            month = initialMonthYear.month,
+            year = initialMonthYear.year,
         ),
         selectableDates = getSelectableDates(
-            initialCalendar = initialCalendar,
+            initialDayOfMonth = initialDayOfMonth.toIntOrNull() ?: 0,
+            initialMonthYear = initialMonthYear,
         ),
     )
 
@@ -109,7 +111,8 @@ fun DateRangePickerDialogPreview(
 ) {
     AppTheme {
         DateRangePickerDialog(
-            initialCalendar = CalendarMonthYear(0, 2, 2025),
+            initialDayOfMonth = "1",
+            initialMonthYear = CalendarMonthYear(0, 2, 2025),
             onDateRangeSelected = {},
             onDismiss = {},
             isDateSelectionEmpty = false,

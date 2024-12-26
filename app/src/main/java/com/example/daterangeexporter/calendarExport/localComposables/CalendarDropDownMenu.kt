@@ -2,6 +2,7 @@ package com.example.daterangeexporter.calendarExport.localComposables
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -21,6 +22,8 @@ import com.example.daterangeexporter.core.theme.AppTheme
 fun CalendarDropDownMenu(
     isVisible: Boolean,
     onDismiss: () -> Unit,
+    mustShowAddNewDateRangeOption: Boolean,
+    onAddNewDateRange: () -> Unit,
     onExportCalendar: () -> Unit,
     modifier: Modifier = Modifier,
     offset: DpOffset = DpOffset(0.dp, 0.dp),
@@ -32,6 +35,26 @@ fun CalendarDropDownMenu(
         shape = MaterialTheme.shapes.small,
         modifier = modifier
     ) {
+        if (mustShowAddNewDateRangeOption) {
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_other_date_range_action_text),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.add_other_date_range_action_text),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                    )
+                },
+                onClick = onAddNewDateRange,
+            )
+        }
         DropdownMenuItem(
             leadingIcon = {
                 Icon(
@@ -62,8 +85,10 @@ fun CalendarDropDownMenuPreview(
         CalendarDropDownMenu(
             isVisible = true,
             onDismiss = {},
+            mustShowAddNewDateRangeOption = true,
+            onAddNewDateRange = {},
             onExportCalendar = {},
-            modifier = modifier
+            modifier = modifier,
         )
     }
 }

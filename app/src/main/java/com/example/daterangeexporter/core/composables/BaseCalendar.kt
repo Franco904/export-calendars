@@ -58,12 +58,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarDropDownMenu
 import com.example.daterangeexporter.calendarExport.localComposables.ClientNameLabelChip
+import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
+import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
+import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionCount
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
 import com.example.daterangeexporter.core.utils.CalendarUtils.getMonthLabelByNumber
 import com.example.daterangeexporter.core.utils.snapshotStateListSaver
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 
@@ -74,12 +76,12 @@ fun BaseCalendar(
     year: Int,
     modifier: Modifier = Modifier,
     showYearLabel: Boolean = true,
-    selectedDates: ImmutableList<String> = persistentListOf(),
-    hasTheStartDate: Boolean = false,
-    hasTheEndDate: Boolean = false,
+    clientNameLabel: String? = null,
+    selectedDatesWithMonthYear: Pair<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>? = null,
     hasDropDownMenu: Boolean = false,
+    mustShowAddNewDateRangeMenuOption: Boolean = false,
     onCardSelect: () -> Unit = {},
-    label: String? = null,
+    onAddNewDateRange: () -> Unit = {},
     onBeforeExportCalendar: suspend () -> Unit = {},
     onExportCalendar: (ImageBitmap) -> Unit = {},
 ) {
@@ -92,37 +94,31 @@ fun BaseCalendar(
     val monthLabel by rememberSaveable { mutableStateOf(context.getMonthLabelByNumber(monthNumber = month)) }
     val numberOfDaysOfMonth by rememberSaveable {
         mutableIntStateOf(
-            CalendarUtils.getNumberOfDaysOfMonth(
-                month,
-                year
-            )
+            CalendarUtils.getNumberOfDaysOfMonth(month, year)
         )
     }
     val firstDayOfWeek by rememberSaveable {
         mutableIntStateOf(
-            CalendarUtils.getFirstDayOfWeekOfMonth(
-                month,
-                year
-            )
+            CalendarUtils.getFirstDayOfWeekOfMonth(month, year)
         )
     }
 
     val daysOfWeekLabels = rememberSaveable(saver = snapshotStateListSaver()) {
         CalendarUtils.daysOfWeek.map { context.getString(it) }.toMutableStateList()
     }
-    val days = rememberSaveable(saver = snapshotStateListSaver()) {
+    val daysOfMonth = rememberSaveable(saver = snapshotStateListSaver()) {
         List(numberOfDaysOfMonth) { day -> (day + 1).toString() }.toMutableStateList()
     }
 
-    var assignedLabel by rememberSaveable { mutableStateOf(label) }
+    var assignedClientNameLabel by rememberSaveable { mutableStateOf(clientNameLabel) }
 
     var isMenuDropDownVisible by remember { mutableStateOf(false) }
 
     var pointerOffset by remember { mutableStateOf(DpOffset(0.dp, 0.dp)) }
     var cardHeight by remember { mutableStateOf(0.dp) }
 
-    LaunchedEffect(label) {
-        assignedLabel = label
+    LaunchedEffect(clientNameLabel) {
+        assignedClientNameLabel = clientNameLabel
     }
 
     CalendarCard(
@@ -150,7 +146,7 @@ fun BaseCalendar(
         Column(
             modifier = modifier
                 .padding(
-                    top = if (!assignedLabel.isNullOrBlank()) 8.dp else 16.dp,
+                    top = if (!assignedClientNameLabel.isNullOrBlank()) 8.dp else 16.dp,
                     end = 16.dp,
                     bottom = 24.dp,
                 )
@@ -164,24 +160,28 @@ fun BaseCalendar(
                     modifier = Modifier
                         .weight(1f)
                 )
-                AnimatedVisibility(!assignedLabel.isNullOrBlank()) {
-                    ClientNameLabelChip(label = assignedLabel ?: "")
+                AnimatedVisibility(!assignedClientNameLabel.isNullOrBlank()) {
+                    ClientNameLabelChip(label = assignedClientNameLabel ?: "")
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
             DatesSection(
                 daysOfWeekLabels = daysOfWeekLabels.toPersistentList(),
                 firstDayOfWeek = firstDayOfWeek,
-                days = days.toPersistentList(),
-                selectedDates = selectedDates,
-                hasTheStartDate = hasTheStartDate,
-                hasTheEndDate = hasTheEndDate,
+                daysOfMonth = daysOfMonth.toPersistentList(),
+                selectedDatesWithMonthYear = selectedDatesWithMonthYear,
             )
         }
         CalendarDropDownMenu(
             isVisible = isMenuDropDownVisible,
             offset = pointerOffset,
             onDismiss = { isMenuDropDownVisible = false },
+            mustShowAddNewDateRangeOption = mustShowAddNewDateRangeMenuOption,
+            onAddNewDateRange = {
+                onAddNewDateRange()
+
+                isMenuDropDownVisible = false
+            },
             onExportCalendar = {
                 coroutineScope.launch {
                     onBeforeExportCalendar()
@@ -191,6 +191,8 @@ fun BaseCalendar(
 
                     onExportCalendar(imageBitmap)
                 }
+
+                isMenuDropDownVisible = false
             },
             modifier = Modifier
         )
@@ -266,10 +268,8 @@ fun MonthLabelSection(
 fun DatesSection(
     daysOfWeekLabels: ImmutableList<String>,
     firstDayOfWeek: Int,
-    days: ImmutableList<String>,
-    selectedDates: ImmutableList<String>,
-    hasTheStartDate: Boolean,
-    hasTheEndDate: Boolean,
+    daysOfMonth: ImmutableList<String>,
+    selectedDatesWithMonthYear: Pair<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>?,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -299,26 +299,35 @@ fun DatesSection(
             )
         }
 
-        items(days) { day ->
-            val isSelected = day in selectedDates
+        items(daysOfMonth) { day ->
             val calendarDayModifier =
                 if (day.length == 1) Modifier.offset(x = (-0.5).dp) else Modifier
 
-            val paddingBottom = when {
-                day in days.takeLast(7) -> 0.dp
-                isSelected -> 16.dp
-                else -> 24.dp
-            }
+            val paddingBottom =
+                if (day in daysOfMonth.takeLast(7)) 0.dp else 24.dp
 
-            CalendarDate(
-                dayText = day,
-                isSelected = isSelected,
-                isStartSelectedDay = hasTheStartDate && isSelected && day == selectedDates.firstOrNull(),
-                isEndSelectedDay = hasTheEndDate && isSelected && day == selectedDates.lastOrNull(),
-                modifier = calendarDayModifier
-                    .wrapContentSize()
-                    .padding(bottom = paddingBottom)
-            )
+            if (selectedDatesWithMonthYear == null) {
+                CalendarDate(
+                    dayText = day,
+                    modifier = calendarDayModifier
+                        .wrapContentSize()
+                        .padding(bottom = paddingBottom)
+                )
+            } else {
+                val selectedDates = selectedDatesWithMonthYear.second
+                val selectedDate = selectedDates.find { it.dayOfMonth == day }
+
+                CalendarDate(
+                    dayText = day,
+                    selectedDate = selectedDate,
+                    modifier = calendarDayModifier
+                        .wrapContentSize()
+                        .padding(
+                            bottom = if (selectedDate != null) 16.dp else paddingBottom
+                        )
+                        .offset(y = if (selectedDate != null) (-5.5).dp else 0.dp)
+                )
+            }
         }
     }
 }
@@ -329,19 +338,17 @@ fun CalendarDate(
     modifier: Modifier = Modifier,
     mustHideText: Boolean = false,
     isWeekDayLabel: Boolean = false,
-    isSelected: Boolean = false,
-    isStartSelectedDay: Boolean = true,
-    isEndSelectedDay: Boolean = false,
+    selectedDate: CalendarSelectedDate? = null,
 ) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .offset(y = if (isSelected) (-5.5).dp else 0.dp)
     ) {
-        AnimatedVisibility(isSelected) {
+        AnimatedVisibility(selectedDate != null) {
             SelectedDateCircle(
-                isStartSelectedDay = isStartSelectedDay,
-                isEndSelectedDay = isEndSelectedDay,
+                isStartSelectedDay = selectedDate?.isRangeStart ?: false,
+                isEndSelectedDay = selectedDate?.isRangeEnd ?: false,
+                selectionRange = selectedDate?.rangeSelectionCount ?: RangeSelectionCount.FIRST,
             )
         }
         Text(
@@ -359,26 +366,53 @@ fun SelectedDateCircle(
     modifier: Modifier = Modifier,
     isStartSelectedDay: Boolean,
     isEndSelectedDay: Boolean,
+    selectionRange: RangeSelectionCount,
 ) {
-    val selectedColor = MaterialTheme.colorScheme.primaryContainer
+    val mainCircleColor = selectionRange.color()
+    val backgroundColor = MaterialTheme.colorScheme.background
 
-    Box(modifier = modifier.size(28.dp)) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawArc(
-                color = selectedColor,
-                startAngle = when {
-                    isStartSelectedDay -> 270f
-                    isEndSelectedDay -> 90f
-                    else -> 270f
-                },
-                sweepAngle = when {
-                    isStartSelectedDay -> 180f
-                    isEndSelectedDay -> 180f
-                    else -> 360f
-                },
-                useCenter = true,
-                style = Fill,
-            )
+    Box(
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(modifier = modifier.size(28.dp)) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawArc(
+                    color = mainCircleColor,
+                    startAngle = when {
+                        isStartSelectedDay -> 270f
+                        isEndSelectedDay -> 90f
+                        else -> 270f
+                    },
+                    sweepAngle = when {
+                        isStartSelectedDay -> 180f
+                        isEndSelectedDay -> 180f
+                        else -> 360f
+                    },
+                    useCenter = true,
+                    style = Fill,
+                )
+            }
+        }
+        if (selectionRange.id > RangeSelectionCount.FIRST.id) {
+            Box(modifier = modifier.size(22.dp)) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawArc(
+                        color = backgroundColor,
+                        startAngle = when {
+                            isStartSelectedDay -> 270f
+                            isEndSelectedDay -> 90f
+                            else -> 270f
+                        },
+                        sweepAngle = when {
+                            isStartSelectedDay -> 180f
+                            isEndSelectedDay -> 180f
+                            else -> 360f
+                        },
+                        useCenter = true,
+                        style = Fill,
+                    )
+                }
+            }
         }
     }
 }
@@ -392,10 +426,7 @@ fun BaseCalendarPreview(
         BaseCalendar(
             month = 1,
             year = 2025,
-            hasTheStartDate = true,
-            hasTheEndDate = true,
-            selectedDates = persistentListOf("27", "28", "29", "30", "31"),
-            label = "Franco Saravia Tavares",
+            clientNameLabel = "Franco Saravia Tavares",
             modifier = modifier,
         )
     }

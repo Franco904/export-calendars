@@ -1,13 +1,14 @@
 package com.example.daterangeexporter.core.utils
 
 import android.content.Context
-import android.icu.util.Calendar
 import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
+import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.Calendar
 import java.util.TimeZone
 
 object CalendarUtils {
@@ -76,23 +77,23 @@ object CalendarUtils {
         return calendar.get(Calendar.DAY_OF_WEEK)
     }
 
-    fun getDatesGroupedByMonthAndYear(
+    fun getRangeDatesGroupedByMonthAndYear(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
-    ): Map<CalendarMonthYear, ImmutableList<String>> {
-        val startDateCalendar = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    ): Map<CalendarMonthYear, ImmutableList<CalendarSelectedDate>> {
+        val startDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             .apply { timeInMillis = startDateTimeMillis }
 
-        val endDateCalendar = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        val endDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             .apply { timeInMillis = endDateTimeMillis }
 
-        val startDayOfMonth = startDateCalendar.get(java.util.Calendar.DAY_OF_MONTH)
-        val startMonth = startDateCalendar.get(java.util.Calendar.MONTH) + 1
-        val startYear = startDateCalendar.get(java.util.Calendar.YEAR)
+        val startDayOfMonth = startDateCalendar.get(Calendar.DAY_OF_MONTH)
+        val startMonth = startDateCalendar.get(Calendar.MONTH) + 1
+        val startYear = startDateCalendar.get(Calendar.YEAR)
 
-        val endDayOfMonth = endDateCalendar.get(java.util.Calendar.DAY_OF_MONTH)
-        val endMonth = endDateCalendar.get(java.util.Calendar.MONTH) + 1
-        val endYear = endDateCalendar.get(java.util.Calendar.YEAR)
+        val endDayOfMonth = endDateCalendar.get(Calendar.DAY_OF_MONTH)
+        val endMonth = endDateCalendar.get(Calendar.MONTH) + 1
+        val endYear = endDateCalendar.get(Calendar.YEAR)
 
         val dates = mutableListOf<LocalDate>()
         var startDate = YearMonth.of(startYear, startMonth).atDay(startDayOfMonth)
@@ -112,7 +113,19 @@ object CalendarUtils {
                 )
             }
             .mapValues { (_, dates) ->
-                dates.map { it.dayOfMonth.toString() }.toPersistentList()
+                dates.map { date ->
+                    val isRangeStart =
+                        date.month.value == startMonth && date.year == startYear && date.dayOfMonth == startDayOfMonth
+
+                    val isRangeEnd =
+                        date.month.value == endMonth && date.year == endYear && date.dayOfMonth == endDayOfMonth
+
+                    CalendarSelectedDate(
+                        dayOfMonth = date.dayOfMonth.toString(),
+                        isRangeStart = isRangeStart,
+                        isRangeEnd = isRangeEnd,
+                    )
+                }.toPersistentList()
             }
     }
 }
