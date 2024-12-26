@@ -47,13 +47,11 @@ fun CalendarLabelAssignDialog(
         R.string.calendar_label_assign_dialog_title_rename
     } else R.string.calendar_label_assign_dialog_title_assign
 
-    // runs after the composition
     LaunchedEffect(Unit) {
         delay(250.milliseconds)
         fieldFocusRequester.requestFocus()
     }
 
-    // runs during the composition and whenever "input" value changes
     LaunchedEffect(input) {
         labelInput = input
     }
