@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -36,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.edit
 import com.example.daterangeexporter.R
+import com.example.daterangeexporter.calendars.localComposables.CalendarsTopBar
 import com.example.daterangeexporter.core.composables.BaseCalendar
 import com.example.daterangeexporter.core.composables.DropdownField
 import com.example.daterangeexporter.core.constants.DEFAULT_SELECTED_YEAR
@@ -43,6 +45,7 @@ import com.example.daterangeexporter.core.constants.SELECTED_YEAR
 import com.example.daterangeexporter.core.infra.dataStore
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -58,6 +61,12 @@ fun CalendarsScreen(
     val focusManager = LocalFocusManager.current
 
     val coroutineScope = rememberCoroutineScope()
+
+    val years by remember { mutableStateOf(
+        CalendarUtils.getNextYears().map { it.toString() }.toPersistentList()
+    ) }
+    val currentYear by remember { mutableIntStateOf(CalendarUtils.getCurrentYear()) }
+    val currentMonth by remember { mutableIntStateOf(CalendarUtils.getCurrentMonth()) }
 
     var selectedYear by rememberSaveable { mutableIntStateOf(DEFAULT_SELECTED_YEAR) }
 
@@ -104,7 +113,10 @@ fun CalendarsScreen(
                     }
             ) {
                 calendarsContent(
+                    years = years,
                     selectedYear = selectedYear,
+                    currentYear = currentYear,
+                    currentMonth = currentMonth,
                     onYearSelect = { year ->
                         selectedYear = year
 
@@ -121,37 +133,10 @@ fun CalendarsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CalendarsTopBar(
-    modifier: Modifier = Modifier,
-) {
-    val outlineVariantColor = MaterialTheme.colorScheme.outlineVariant
-
-    TopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.calendars_title),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-        ),
-        modifier = modifier
-            .drawBehind {
-                drawLine(
-                    color = outlineVariantColor,
-                    start = Offset(x = 0f, y = size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 2.dp.toPx(),
-                )
-            }
-    )
-}
-
 fun LazyListScope.calendarsContent(
+    years: ImmutableList<String>,
+    currentYear: Int,
+    currentMonth: Int,
     selectedYear: Int,
     onYearSelect: (Int) -> Unit,
     onCalendarSelect: (Int, Int) -> Unit,
@@ -163,7 +148,7 @@ fun LazyListScope.calendarsContent(
     item {
         DropdownField(
             placeholderText = stringResource(R.string.year_dropdown_field_placeholder),
-            items = CalendarUtils.getNextYears().map { it.toString() }.toPersistentList(),
+            items = years,
             onItemSelect = { year -> onYearSelect(year.toInt()) },
             defaultItem = selectedYear.toString(),
         )
@@ -173,9 +158,7 @@ fun LazyListScope.calendarsContent(
         Spacer(modifier = Modifier.height(16.dp))
     }
 
-    if (selectedYear == CalendarUtils.getCurrentYear()) {
-        val currentMonth = CalendarUtils.getCurrentMonth()
-
+    if (selectedYear == currentYear) {
         items(
             key = { i -> i },
             count = 12 - currentMonth,
