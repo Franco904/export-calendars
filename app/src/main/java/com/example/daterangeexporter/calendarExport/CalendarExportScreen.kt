@@ -62,7 +62,7 @@ fun CalendarExportScreen(
     var rangeSelectionCount by remember { mutableIntStateOf(RangeSelectionCount.FIRST.id) }
 
     val initialCalendar = CalendarMonthYear(
-        id = selectedMonth + selectedYear + rangeSelectionCount,
+        id = selectedMonth + selectedYear,
         month = selectedMonth,
         year = selectedYear,
     )
@@ -72,7 +72,6 @@ fun CalendarExportScreen(
     var selectedDates by remember { mutableStateOf(emptySelectedDates) }
 
     var calendarLabelInput by remember { mutableStateOf<String?>(null) }
-
 
     var mustShowDateRangePickerDialog by remember { mutableStateOf(false) }
     var mustShowLabelAssignDialog by remember { mutableStateOf(false) }
@@ -131,9 +130,6 @@ fun CalendarExportScreen(
                                 startDateTimeMillis = startDateTimeMillis,
                                 endDateTimeMillis = endDateTimeMillis,
                             )
-                                .mapKeys { (monthYear, _) ->
-                                    monthYear.copy(id = monthYear.id + rangeSelectionCount)
-                                }
                                 .mapValues { (_, dates) ->
                                     dates.map { date ->
                                         date.copy(
@@ -144,7 +140,16 @@ fun CalendarExportScreen(
                                     }.toPersistentList()
                                 }
 
-                            selectedDates = selectedDates + newDates
+                            val mergedSelectedDates = selectedDates.toMutableMap()
+
+                            newDates.forEach { (monthYear, dates) ->
+                                val existingValuesForKey = selectedDates[monthYear] ?: emptyList()
+                                val mergedDates = (existingValuesForKey + dates).toPersistentList()
+
+                                mergedSelectedDates[monthYear] = mergedDates
+                            }
+
+                            selectedDates = mergedSelectedDates
 
                             rangeSelectionCount += 1
                             mustShowDateRangePickerDialog = false
