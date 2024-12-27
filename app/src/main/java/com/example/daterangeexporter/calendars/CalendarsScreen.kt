@@ -10,12 +10,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,8 +23,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -62,9 +56,11 @@ fun CalendarsScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
-    val years by remember { mutableStateOf(
-        CalendarUtils.getNextYears().map { it.toString() }.toPersistentList()
-    ) }
+    val years by remember {
+        mutableStateOf(
+            CalendarUtils.getNextYears().map { it.toString() }.toPersistentList()
+        )
+    }
     val currentYear by remember { mutableIntStateOf(CalendarUtils.getCurrentYear()) }
     val currentMonth by remember { mutableIntStateOf(CalendarUtils.getCurrentMonth()) }
 

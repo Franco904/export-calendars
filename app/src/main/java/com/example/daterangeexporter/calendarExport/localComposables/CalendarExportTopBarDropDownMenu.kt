@@ -88,10 +88,13 @@ fun CalendarExportTopBarDropDownMenuPreview(
     modifier: Modifier = Modifier,
 ) {
     AppTheme {
-        CalendarDropDownMenu(
+        CalendarExportTopBarDropDownMenu(
             isVisible = true,
+            hasDatesSelected = false,
+            hasLabelAssigned = false,
+            onDatesSelect = {},
+            onLabelAssign = {},
             onDismiss = {},
-            onExportCalendar = {},
             modifier = modifier
         )
     }

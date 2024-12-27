@@ -1,14 +1,8 @@
 package com.example.daterangeexporter.core.utils
 
 import android.content.Context
-import android.icu.util.Calendar
 import com.example.daterangeexporter.R
-import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toPersistentList
-import java.time.LocalDate
-import java.time.YearMonth
-import java.util.TimeZone
+import java.util.Calendar
 
 object CalendarUtils {
     val daysOfWeek = listOf(
@@ -74,45 +68,5 @@ object CalendarUtils {
         calendar.set(year, month - 1, 1)
 
         return calendar.get(Calendar.DAY_OF_WEEK)
-    }
-
-    fun getDatesGroupedByMonthAndYear(
-        startDateTimeMillis: Long,
-        endDateTimeMillis: Long,
-    ): Map<CalendarMonthYear, ImmutableList<String>> {
-        val startDateCalendar = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            .apply { timeInMillis = startDateTimeMillis }
-
-        val endDateCalendar = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            .apply { timeInMillis = endDateTimeMillis }
-
-        val startDayOfMonth = startDateCalendar.get(java.util.Calendar.DAY_OF_MONTH)
-        val startMonth = startDateCalendar.get(java.util.Calendar.MONTH) + 1
-        val startYear = startDateCalendar.get(java.util.Calendar.YEAR)
-
-        val endDayOfMonth = endDateCalendar.get(java.util.Calendar.DAY_OF_MONTH)
-        val endMonth = endDateCalendar.get(java.util.Calendar.MONTH) + 1
-        val endYear = endDateCalendar.get(java.util.Calendar.YEAR)
-
-        val dates = mutableListOf<LocalDate>()
-        var startDate = YearMonth.of(startYear, startMonth).atDay(startDayOfMonth)
-        val endDate = YearMonth.of(endYear, endMonth).atDay(endDayOfMonth)
-
-        while (startDate <= endDate) {
-            dates.add(startDate)
-            startDate = startDate.plusDays(1)
-        }
-
-        return dates
-            .groupBy { date ->
-                CalendarMonthYear(
-                    id = date.month.value + date.year,
-                    month = date.month.value,
-                    year = date.year,
-                )
-            }
-            .mapValues { (_, dates) ->
-                dates.map { it.dayOfMonth.toString() }.toPersistentList()
-            }
     }
 }

@@ -4,6 +4,10 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
+object AppCustomColors {
+    val blue400 = Color(0xFF42A5F5)
+}
+
 val primaryLight = Color(0xFF0D6B58)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFA2F2DA)

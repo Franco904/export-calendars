@@ -31,8 +31,11 @@
     <string name="more_options_action_content_description">Ver opções</string>
     <string name="assign_name_calendar_action_text">Adicionar nome</string>
     <string name="rename_calendar_action_text">Renomear</string>
+
+    <string name="add_other_date_range_action_text">Adicionar outro período</string>
     <string name="export_calendar_action_content_description">Exportar calendário</string>
     <string name="export_calendar_action_text">Compartilhar</string>
+
     <string name="export_calendar_title">Calendário</string>
     <string name="edit_calendar_selected_dates_action_text">Selecionar datas</string>
     <string name="clear_calendar_selected_dates_action_text">Limpar seleção</string>
