@@ -2,14 +2,7 @@ package com.example.daterangeexporter.core.utils
 
 import android.content.Context
 import com.example.daterangeexporter.R
-import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
-import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toPersistentList
-import java.time.LocalDate
-import java.time.YearMonth
 import java.util.Calendar
-import java.util.TimeZone
 
 object CalendarUtils {
     val daysOfWeek = listOf(
@@ -75,57 +68,5 @@ object CalendarUtils {
         calendar.set(year, month - 1, 1)
 
         return calendar.get(Calendar.DAY_OF_WEEK)
-    }
-
-    fun getRangeDatesGroupedByMonthAndYear(
-        startDateTimeMillis: Long,
-        endDateTimeMillis: Long,
-    ): Map<CalendarMonthYear, MutableList<CalendarSelectedDate>> {
-        val startDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            .apply { timeInMillis = startDateTimeMillis }
-
-        val endDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            .apply { timeInMillis = endDateTimeMillis }
-
-        val startDayOfMonth = startDateCalendar.get(Calendar.DAY_OF_MONTH)
-        val startMonth = startDateCalendar.get(Calendar.MONTH) + 1
-        val startYear = startDateCalendar.get(Calendar.YEAR)
-
-        val endDayOfMonth = endDateCalendar.get(Calendar.DAY_OF_MONTH)
-        val endMonth = endDateCalendar.get(Calendar.MONTH) + 1
-        val endYear = endDateCalendar.get(Calendar.YEAR)
-
-        val dates = mutableListOf<LocalDate>()
-        var startDate = YearMonth.of(startYear, startMonth).atDay(startDayOfMonth)
-        val endDate = YearMonth.of(endYear, endMonth).atDay(endDayOfMonth)
-
-        while (startDate <= endDate) {
-            dates.add(startDate)
-            startDate = startDate.plusDays(1)
-        }
-
-        return dates
-            .groupBy { date ->
-                CalendarMonthYear(
-                    id = date.month.value + date.year,
-                    month = date.month.value,
-                    year = date.year,
-                )
-            }
-            .mapValues { (_, dates) ->
-                dates.map { date ->
-                    val isRangeStart =
-                        date.month.value == startMonth && date.year == startYear && date.dayOfMonth == startDayOfMonth
-
-                    val isRangeEnd =
-                        date.month.value == endMonth && date.year == endYear && date.dayOfMonth == endDayOfMonth
-
-                    CalendarSelectedDate(
-                        dayOfMonth = date.dayOfMonth.toString(),
-                        isRangeStart = isRangeStart,
-                        isRangeEnd = isRangeEnd,
-                    )
-                }.toMutableList()
-            }
     }
 }

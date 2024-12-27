@@ -15,8 +15,8 @@ enum class RangeSelectionLabel(
     Third(count = 3, color = { AppCustomColors.orange400 });
 
     companion object {
-        fun fromId(id: Int): RangeSelectionLabel {
-            return entries.find { it.count == id } ?: None
+        fun fromCount(count: Int): RangeSelectionLabel {
+            return entries.find { it.count == count } ?: None
         }
     }
 }

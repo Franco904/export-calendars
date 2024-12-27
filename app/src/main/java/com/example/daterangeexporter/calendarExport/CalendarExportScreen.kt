@@ -37,13 +37,11 @@ import com.example.daterangeexporter.core.composables.DateRangePickerDialog
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.deleteAllFiles
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.saveImage
 import com.example.daterangeexporter.core.theme.AppTheme
-import com.example.daterangeexporter.core.utils.CalendarUtils
 import com.example.daterangeexporter.core.utils.IMAGE_PNG_TYPE
 import com.example.daterangeexporter.core.utils.itemsIndexed
 import com.example.daterangeexporter.core.utils.showShareSheet
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -126,59 +124,12 @@ fun CalendarExportScreen(
                                 return@DateRangePickerDialog
                             }
 
-                            // TODO: extract to separated method
-                            val newSelectedDates = selectedDates.toMutableMap()
-
-                            CalendarUtils.getRangeDatesGroupedByMonthAndYear(
+                            selectedDates = CalendarExportUtils.getSelectedDates(
                                 startDateTimeMillis = startDateTimeMillis,
                                 endDateTimeMillis = endDateTimeMillis,
+                                currentRangeCount = rangeSelectionLabel,
+                                currentSelectedDates = selectedDates,
                             )
-                                .mapValues { (_, dates) ->
-                                    dates.map { date ->
-                                        val firstDateHalfLabel = if (date.isRangeStart) {
-                                            RangeSelectionLabel.None
-                                        } else RangeSelectionLabel.fromId(rangeSelectionLabel)
-
-                                        val secondDateHalfLabel = if (date.isRangeEnd) {
-                                            RangeSelectionLabel.None
-                                        } else RangeSelectionLabel.fromId(rangeSelectionLabel)
-
-                                        date.copy(
-                                            rangeSelectionLabel = firstDateHalfLabel to secondDateHalfLabel
-                                        )
-                                    }.toPersistentList()
-                                }
-                                .forEach { (monthYear, dates) ->
-                                    val existingValuesForKey =
-                                        selectedDates[monthYear] ?: emptyList()
-                                    val mergedDates =
-                                        (existingValuesForKey + dates).toPersistentList()
-
-                                    newSelectedDates[monthYear] = mergedDates
-                                }
-
-                            val newNewSelectedDates = newSelectedDates
-                                .mapValues { (_, monthDates) ->
-                                    val daysOfMonth = monthDates.map { it.dayOfMonth }
-                                    val hasRepeatedDates = daysOfMonth.size != daysOfMonth.toSet().size
-
-                                    if (hasRepeatedDates) {
-                                        val datesGroupedByDayOfMonth = monthDates.groupBy { it.dayOfMonth }
-
-                                        val reduced = datesGroupedByDayOfMonth.mapValues { (_, dates) ->
-                                            dates.reduce { previous, current ->
-                                                previous.copy(
-                                                    isRangeStart = current.isRangeStart,
-                                                    rangeSelectionLabel = previous.rangeSelectionLabel.first to current.rangeSelectionLabel.second,
-                                                )
-                                            }
-                                        }
-
-                                        reduced.values.toPersistentList()
-                                    } else monthDates
-                                }.toMutableMap()
-
-                            selectedDates = newNewSelectedDates
 
                             rangeSelectionLabel += 1
                             mustShowDateRangePickerDialog = false
