@@ -5,8 +5,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 object AppCustomColors {
-    val purple200 = Color(0xFFCE93D8)
-    val orange400 = Color(0xFFFFA726)
+    val blue400 = Color(0xFF42A5F5)
 }
 
 val primaryLight = Color(0xFF0D6B58)

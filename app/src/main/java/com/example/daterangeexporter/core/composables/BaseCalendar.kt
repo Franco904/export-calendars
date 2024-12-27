@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.Fill
@@ -350,6 +351,7 @@ fun CalendarDate(
 
             SelectedDateCircle(
                 selectionRange = selectedDate.rangeSelectionLabel,
+                isRangeEnd = selectedDate.isRangeEnd,
             )
         }
         Text(
@@ -366,6 +368,7 @@ fun CalendarDate(
 fun SelectedDateCircle(
     modifier: Modifier = Modifier,
     selectionRange: Pair<RangeSelectionLabel, RangeSelectionLabel>,
+    isRangeEnd: Boolean,
 ) {
     val (firstCircleHalfRange, secondCircleHalfRange) = selectionRange
 
@@ -378,12 +381,12 @@ fun SelectedDateCircle(
         contentAlignment = Alignment.Center,
         modifier = modifier
     ) {
-        SelectedDateCirclePiece(
+        SelectedDateSubCircle(
             size = 28.dp,
             firstCircleHalfColor = firstCircleHalfColor,
             secondCircleHalfColor = secondCircleHalfColor,
         )
-        SelectedDateCirclePiece(
+        SelectedDateSubCircle(
             size = 22.dp,
             firstCircleHalfColor = if (firstCircleHalfRange == RangeSelectionLabel.First) {
                 firstCircleHalfColor
@@ -392,11 +395,16 @@ fun SelectedDateCircle(
                 secondCircleHalfColor
             } else backgroundColor,
         )
+        if (firstCircleHalfRange.count > RangeSelectionLabel.First.count && isRangeEnd) {
+            SelectedDateMiddleDivider(
+                firstCircleHalfColor = firstCircleHalfColor,
+            )
+        }
     }
 }
 
 @Composable
-fun SelectedDateCirclePiece(
+fun SelectedDateSubCircle(
     size: Dp,
     firstCircleHalfColor: Color,
     secondCircleHalfColor: Color,
@@ -418,6 +426,26 @@ fun SelectedDateCirclePiece(
                 sweepAngle = 180f,
                 useCenter = true,
                 style = Fill,
+            )
+        }
+    }
+}
+
+@Composable
+fun SelectedDateMiddleDivider(
+    firstCircleHalfColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.size(28.dp)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val canvasWidth = size.width
+            val canvasHeight = size.height
+
+            drawLine(
+                color = firstCircleHalfColor,
+                start = Offset(x = canvasWidth / 2, y = 0f), // Start from the top
+                end = Offset(x = canvasWidth / 2, y = canvasHeight), // End at the bottom
+                strokeWidth = 8f,
             )
         }
     }

@@ -11,8 +11,8 @@ enum class RangeSelectionLabel(
 ) {
     None(count = 0, color = { MaterialTheme.colorScheme.background }),
     First(count = 1, color = { MaterialTheme.colorScheme.primaryContainer }),
-    Second(count = 2, color = { AppCustomColors.purple200 }),
-    Third(count = 3, color = { AppCustomColors.orange400 });
+    Second(count = 2, color = { MaterialTheme.colorScheme.primaryContainer }),
+    Third(count = 3, color = { AppCustomColors.blue400 });
 
     companion object {
         fun fromCount(count: Int): RangeSelectionLabel {
