@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -60,7 +61,7 @@ import com.example.daterangeexporter.calendarExport.localComposables.CalendarDro
 import com.example.daterangeexporter.calendarExport.localComposables.ClientNameLabelChip
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
-import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionCount
+import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionLabel
 import com.example.daterangeexporter.core.theme.AppTheme
 import com.example.daterangeexporter.core.utils.CalendarUtils
 import com.example.daterangeexporter.core.utils.CalendarUtils.getMonthLabelByNumber
@@ -345,10 +346,10 @@ fun CalendarDate(
         modifier = modifier
     ) {
         AnimatedVisibility(selectedDate != null) {
+            if (selectedDate == null) return@AnimatedVisibility
+
             SelectedDateCircle(
-                isStartSelectedDay = selectedDate?.isRangeStart ?: false,
-                isEndSelectedDay = selectedDate?.isRangeEnd ?: false,
-                selectionRange = selectedDate?.rangeSelectionCount ?: RangeSelectionCount.FIRST,
+                selectionRange = selectedDate.rangeSelectionLabel,
             )
         }
         Text(
@@ -364,55 +365,60 @@ fun CalendarDate(
 @Composable
 fun SelectedDateCircle(
     modifier: Modifier = Modifier,
-    isStartSelectedDay: Boolean,
-    isEndSelectedDay: Boolean,
-    selectionRange: RangeSelectionCount,
+    selectionRange: Pair<RangeSelectionLabel, RangeSelectionLabel>,
 ) {
-    val mainCircleColor = selectionRange.color()
+    val (firstCircleHalfRange, secondCircleHalfRange) = selectionRange
+
+    val firstCircleHalfColor = firstCircleHalfRange.color()
+    val secondCircleHalfColor = secondCircleHalfRange.color()
+
     val backgroundColor = MaterialTheme.colorScheme.background
 
     Box(
         contentAlignment = Alignment.Center,
+        modifier = modifier
     ) {
-        Box(modifier = modifier.size(28.dp)) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawArc(
-                    color = mainCircleColor,
-                    startAngle = when {
-                        isStartSelectedDay -> 270f
-                        isEndSelectedDay -> 90f
-                        else -> 270f
-                    },
-                    sweepAngle = when {
-                        isStartSelectedDay -> 180f
-                        isEndSelectedDay -> 180f
-                        else -> 360f
-                    },
-                    useCenter = true,
-                    style = Fill,
-                )
-            }
-        }
-        if (selectionRange.id > RangeSelectionCount.FIRST.id) {
-            Box(modifier = modifier.size(22.dp)) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawArc(
-                        color = backgroundColor,
-                        startAngle = when {
-                            isStartSelectedDay -> 270f
-                            isEndSelectedDay -> 90f
-                            else -> 270f
-                        },
-                        sweepAngle = when {
-                            isStartSelectedDay -> 180f
-                            isEndSelectedDay -> 180f
-                            else -> 360f
-                        },
-                        useCenter = true,
-                        style = Fill,
-                    )
-                }
-            }
+        SelectedDateCirclePiece(
+            size = 28.dp,
+            firstCircleHalfColor = firstCircleHalfColor,
+            secondCircleHalfColor = secondCircleHalfColor,
+        )
+        SelectedDateCirclePiece(
+            size = 22.dp,
+            firstCircleHalfColor = if (firstCircleHalfRange == RangeSelectionLabel.First) {
+                firstCircleHalfColor
+            } else backgroundColor,
+            secondCircleHalfColor = if (secondCircleHalfRange == RangeSelectionLabel.First) {
+                secondCircleHalfColor
+            } else backgroundColor,
+        )
+    }
+}
+
+@Composable
+fun SelectedDateCirclePiece(
+    size: Dp,
+    firstCircleHalfColor: Color,
+    secondCircleHalfColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.size(size)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            // arc 0° angle starts at 3 o'clock
+            drawArc(
+                color = firstCircleHalfColor,
+                startAngle = 90f,
+                sweepAngle = 180f,
+                useCenter = true,
+                style = Fill,
+            )
+            drawArc(
+                color = secondCircleHalfColor,
+                startAngle = 270f,
+                sweepAngle = 180f,
+                useCenter = true,
+                style = Fill,
+            )
         }
     }
 }

@@ -4,5 +4,6 @@ data class CalendarSelectedDate(
     val dayOfMonth: String,
     val isRangeStart: Boolean = false,
     val isRangeEnd: Boolean = false,
-    val rangeSelectionCount: RangeSelectionCount = RangeSelectionCount.NONE,
+    val rangeSelectionLabel: Pair<RangeSelectionLabel, RangeSelectionLabel> =
+        RangeSelectionLabel.None to RangeSelectionLabel.None,
 )

@@ -80,7 +80,7 @@ object CalendarUtils {
     fun getRangeDatesGroupedByMonthAndYear(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
-    ): Map<CalendarMonthYear, ImmutableList<CalendarSelectedDate>> {
+    ): Map<CalendarMonthYear, MutableList<CalendarSelectedDate>> {
         val startDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             .apply { timeInMillis = startDateTimeMillis }
 
@@ -125,7 +125,7 @@ object CalendarUtils {
                         isRangeStart = isRangeStart,
                         isRangeEnd = isRangeEnd,
                     )
-                }.toPersistentList()
+                }.toMutableList()
             }
     }
 }

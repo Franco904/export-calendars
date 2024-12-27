@@ -31,7 +31,7 @@ import com.example.daterangeexporter.calendarExport.localComposables.CalendarExp
 import com.example.daterangeexporter.calendarExport.localComposables.CalendarLabelAssignDialog
 import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
-import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionCount
+import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionLabel
 import com.example.daterangeexporter.core.composables.BaseCalendar
 import com.example.daterangeexporter.core.composables.DateRangePickerDialog
 import com.example.daterangeexporter.core.infra.InternalStorageHandler.deleteAllFiles
@@ -59,7 +59,7 @@ fun CalendarExportScreen(
 ) {
     val lazyListState = rememberLazyListState()
 
-    var rangeSelectionCount by remember { mutableIntStateOf(RangeSelectionCount.FIRST.id) }
+    var rangeSelectionLabel by remember { mutableIntStateOf(RangeSelectionLabel.First.count) }
 
     val initialCalendar = CalendarMonthYear(
         id = selectedMonth + selectedYear,
@@ -84,7 +84,7 @@ fun CalendarExportScreen(
                     mustShowDateRangePickerDialog = true
                 },
                 onClearSelectedDates = {
-                    rangeSelectionCount = RangeSelectionCount.FIRST.id
+                    rangeSelectionLabel = RangeSelectionLabel.First.count
                     selectedDates = emptySelectedDates
                 },
                 onLabelAssign = {
@@ -108,12 +108,12 @@ fun CalendarExportScreen(
             if (mustShowDateRangePickerDialog) {
                 item {
                     val isDateSelectionEmpty =
-                        selectedDates == emptySelectedDates || rangeSelectionCount >= RangeSelectionCount.SECOND.id
+                        selectedDates == emptySelectedDates || rangeSelectionLabel >= RangeSelectionLabel.Second.count
 
                     DateRangePickerDialog(
                         initialDayOfMonth = selectedDates.values.last().lastOrNull()?.dayOfMonth
                             ?: "1",
-                        initialMonthYear = if (rangeSelectionCount == RangeSelectionCount.FIRST.id) {
+                        initialMonthYear = if (rangeSelectionLabel == RangeSelectionLabel.First.count) {
                             initialCalendar
                         } else {
                             initialCalendar.copy(
@@ -126,32 +126,61 @@ fun CalendarExportScreen(
                                 return@DateRangePickerDialog
                             }
 
-                            val newDates = CalendarUtils.getRangeDatesGroupedByMonthAndYear(
+                            // TODO: extract to separated method
+                            val newSelectedDates = selectedDates.toMutableMap()
+
+                            CalendarUtils.getRangeDatesGroupedByMonthAndYear(
                                 startDateTimeMillis = startDateTimeMillis,
                                 endDateTimeMillis = endDateTimeMillis,
                             )
                                 .mapValues { (_, dates) ->
                                     dates.map { date ->
+                                        val firstDateHalfLabel = if (date.isRangeStart) {
+                                            RangeSelectionLabel.None
+                                        } else RangeSelectionLabel.fromId(rangeSelectionLabel)
+
+                                        val secondDateHalfLabel = if (date.isRangeEnd) {
+                                            RangeSelectionLabel.None
+                                        } else RangeSelectionLabel.fromId(rangeSelectionLabel)
+
                                         date.copy(
-                                            rangeSelectionCount = RangeSelectionCount.fromId(
-                                                rangeSelectionCount
-                                            )
+                                            rangeSelectionLabel = firstDateHalfLabel to secondDateHalfLabel
                                         )
                                     }.toPersistentList()
                                 }
+                                .forEach { (monthYear, dates) ->
+                                    val existingValuesForKey =
+                                        selectedDates[monthYear] ?: emptyList()
+                                    val mergedDates =
+                                        (existingValuesForKey + dates).toPersistentList()
 
-                            val mergedSelectedDates = selectedDates.toMutableMap()
+                                    newSelectedDates[monthYear] = mergedDates
+                                }
 
-                            newDates.forEach { (monthYear, dates) ->
-                                val existingValuesForKey = selectedDates[monthYear] ?: emptyList()
-                                val mergedDates = (existingValuesForKey + dates).toPersistentList()
+                            val newNewSelectedDates = newSelectedDates
+                                .mapValues { (_, monthDates) ->
+                                    val daysOfMonth = monthDates.map { it.dayOfMonth }
+                                    val hasRepeatedDates = daysOfMonth.size != daysOfMonth.toSet().size
 
-                                mergedSelectedDates[monthYear] = mergedDates
-                            }
+                                    if (hasRepeatedDates) {
+                                        val datesGroupedByDayOfMonth = monthDates.groupBy { it.dayOfMonth }
 
-                            selectedDates = mergedSelectedDates
+                                        val reduced = datesGroupedByDayOfMonth.mapValues { (_, dates) ->
+                                            dates.reduce { previous, current ->
+                                                previous.copy(
+                                                    isRangeStart = current.isRangeStart,
+                                                    rangeSelectionLabel = previous.rangeSelectionLabel.first to current.rangeSelectionLabel.second,
+                                                )
+                                            }
+                                        }
 
-                            rangeSelectionCount += 1
+                                        reduced.values.toPersistentList()
+                                    } else monthDates
+                                }.toMutableMap()
+
+                            selectedDates = newNewSelectedDates
+
+                            rangeSelectionLabel += 1
                             mustShowDateRangePickerDialog = false
                         },
                         onDismiss = {
@@ -187,7 +216,7 @@ fun CalendarExportScreen(
                     val isLastMonth = calendarMonthYear == selectedDates.keys.last()
                     val hasAnyDateSelected = selectedDates.values.first().isNotEmpty()
                     val hasReachedMaxSelectionCount =
-                        rangeSelectionCount <= RangeSelectionCount.entries.last().id
+                        rangeSelectionLabel <= RangeSelectionLabel.entries.last().count
 
                     mustShowAddNewDateRangeMenuOption =
                         isLastMonth && hasAnyDateSelected && hasReachedMaxSelectionCount
