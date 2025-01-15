@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.example.daterangeexporter.RouteHandler.routes
+import com.example.daterangeexporter.DestinationsHandler.destinations
 import com.example.daterangeexporter.core.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,8 +18,8 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.Calendars,
-                    builder = { routes(navController) },
+                    startDestination = Destinations.Calendars,
+                    builder = { destinations(navController) },
                 )
             }
         }

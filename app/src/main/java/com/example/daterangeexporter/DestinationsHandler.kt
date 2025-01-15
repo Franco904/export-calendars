@@ -7,17 +7,17 @@ import androidx.navigation.toRoute
 import com.example.daterangeexporter.calendarExport.CalendarExportScreen
 import com.example.daterangeexporter.calendars.CalendarsScreen
 
-object RouteHandler {
-    fun NavGraphBuilder.routes(navController: NavController) {
-        composable<Routes.Calendars> {
+object DestinationsHandler {
+    fun NavGraphBuilder.destinations(navController: NavController) {
+        composable<Destinations.Calendars> {
             CalendarsScreen(
                 onCalendarSelect = { month, year ->
-                    navController.navigate(Routes.CalendarExport(month, year))
+                    navController.navigate(Destinations.CalendarExport(month, year))
                 },
             )
         }
-        composable<Routes.CalendarExport> { backStackEntry ->
-            val route = backStackEntry.toRoute<Routes.CalendarExport>()
+        composable<Destinations.CalendarExport> { backStackEntry ->
+            val route = backStackEntry.toRoute<Destinations.CalendarExport>()
 
             val selectedMonth = route.month
             val selectedYear = route.year

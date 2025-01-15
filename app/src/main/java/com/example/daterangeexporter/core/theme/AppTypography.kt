@@ -49,23 +49,3 @@ val AppTypography = Typography(
         fontSize = 12.sp,
     ),
 )
-
-//val baseline = Typography()
-//
-//val AppTypography = Typography(
-//    displayLarge = com.example.ui.theme.baseline.displayLarge.copy(fontFamily = displayFontFamily),
-//    displayMedium = com.example.ui.theme.baseline.displayMedium.copy(fontFamily = displayFontFamily),
-//    displaySmall = com.example.ui.theme.baseline.displaySmall.copy(fontFamily = displayFontFamily),
-//    headlineLarge = com.example.ui.theme.baseline.headlineLarge.copy(fontFamily = displayFontFamily),
-//    headlineMedium = com.example.ui.theme.baseline.headlineMedium.copy(fontFamily = displayFontFamily),
-//    headlineSmall = com.example.ui.theme.baseline.headlineSmall.copy(fontFamily = displayFontFamily),
-//    titleLarge = com.example.ui.theme.baseline.titleLarge.copy(fontFamily = displayFontFamily),
-//    titleMedium = com.example.ui.theme.baseline.titleMedium.copy(fontFamily = displayFontFamily),
-//    titleSmall = com.example.ui.theme.baseline.titleSmall.copy(fontFamily = displayFontFamily),
-//    bodyLarge = com.example.ui.theme.baseline.bodyLarge.copy(fontFamily = bodyFontFamily),
-//    bodyMedium = com.example.ui.theme.baseline.bodyMedium.copy(fontFamily = bodyFontFamily),
-//    bodySmall = com.example.ui.theme.baseline.bodySmall.copy(fontFamily = bodyFontFamily),
-//    labelLarge = com.example.ui.theme.baseline.labelLarge.copy(fontFamily = bodyFontFamily),
-//    labelMedium = com.example.ui.theme.baseline.labelMedium.copy(fontFamily = bodyFontFamily),
-//    labelSmall = com.example.ui.theme.baseline.labelSmall.copy(fontFamily = bodyFontFamily),
-//)

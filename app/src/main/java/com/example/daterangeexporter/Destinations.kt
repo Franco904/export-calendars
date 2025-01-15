@@ -2,7 +2,7 @@ package com.example.daterangeexporter
 
 import kotlinx.serialization.Serializable
 
-sealed interface Routes {
+sealed interface Destinations {
     @Serializable
     data object Calendars
 
