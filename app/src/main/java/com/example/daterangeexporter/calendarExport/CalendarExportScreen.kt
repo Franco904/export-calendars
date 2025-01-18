@@ -226,7 +226,7 @@ fun SelectableDatesCalendar(
 }
 
 private fun Context.exportCalendarImage(bitmap: ImageBitmap) {
-    deleteAllFiles(on = { file -> file.name.startsWith("calendar-") })
+    deleteAllFiles { file -> file.name.startsWith("calendar-") }
 
     val currentTimestamp = Calendar.getInstance().timeInMillis
     val file = saveImage(bitmap.asAndroidBitmap(), fileName = "calendar-$currentTimestamp.png")

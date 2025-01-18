@@ -15,9 +15,9 @@ object InternalStorageHandler {
         return file
     }
 
-    inline fun Context.deleteAllFiles(on: (file: File) -> Boolean) {
+    inline fun Context.deleteAllFiles(predicate: (file: File) -> Boolean) {
         filesDir.listFiles()?.forEach { file ->
-            if (file.isFile && on(file)) file.delete()
+            if (file.isFile && predicate(file)) file.delete()
         }
     }
 }
