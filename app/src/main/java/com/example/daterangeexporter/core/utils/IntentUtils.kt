@@ -9,18 +9,10 @@ const val IMAGE_PNG_TYPE = "image/png"
 
 fun Context.showShareSheet(
     action: String,
-    intentData: Uri? = null,
-    intentType: String,
-    intentFlags: Int,
-    extras: Bundle,
+    intentConfig: Intent.() -> Unit,
 ) {
-    val sendIntent = Intent(action).apply {
-        setDataAndType(intentData, intentType)
-        flags = intentFlags
-
-        putExtras(extras)
-    }
-
+    val sendIntent = Intent(action).apply { intentConfig() }
     val shareSheet = Intent.createChooser(sendIntent, null, null)
+
     startActivity(shareSheet)
 }

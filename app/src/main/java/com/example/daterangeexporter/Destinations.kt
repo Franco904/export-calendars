@@ -7,5 +7,5 @@ sealed interface Destinations {
     data object Calendars
 
     @Serializable
-    data class CalendarExport(val month: Int, val year: Int)
+    data object CalendarExport
 }

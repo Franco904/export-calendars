@@ -4,14 +4,16 @@ import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYea
 import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionLabel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentList
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Calendar
 import java.util.TimeZone
 
-typealias MutableSelectedDates = Map<CalendarMonthYear, MutableList<CalendarSelectedDate>>
-typealias ImmutableSelectedDates = Map<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>
+typealias MutableSelectedDates = ImmutableMap<CalendarMonthYear, MutableList<CalendarSelectedDate>>
+typealias ImmutableSelectedDates = ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>
 
 object CalendarExportUtils {
     fun getSelectedDates(
@@ -32,7 +34,7 @@ object CalendarExportUtils {
     private fun getRangeDatesGroupedByMonthAndYear(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
-    ): Map<CalendarMonthYear, MutableList<CalendarSelectedDate>> {
+    ): MutableSelectedDates {
         val startDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             .apply { timeInMillis = startDateTimeMillis }
 
@@ -47,10 +49,10 @@ object CalendarExportUtils {
         val endMonth = endDateCalendar.get(Calendar.MONTH) + 1
         val endYear = endDateCalendar.get(Calendar.YEAR)
 
-        val dates = mutableListOf<LocalDate>()
         var startDate = YearMonth.of(startYear, startMonth).atDay(startDayOfMonth)
         val endDate = YearMonth.of(endYear, endMonth).atDay(endDayOfMonth)
 
+        val dates = mutableListOf<LocalDate>()
         while (startDate <= endDate) {
             dates.add(startDate)
             startDate = startDate.plusDays(1)
@@ -79,6 +81,7 @@ object CalendarExportUtils {
                     )
                 }.toMutableList()
             }
+            .toImmutableMap()
     }
 
     private fun MutableSelectedDates.populateRangeSelectionLabels(
@@ -99,6 +102,7 @@ object CalendarExportUtils {
                 )
             }.toPersistentList()
         }
+            .toImmutableMap()
     }
 
     private fun ImmutableSelectedDates.mergeToExistingDates(
@@ -106,7 +110,7 @@ object CalendarExportUtils {
     ): ImmutableSelectedDates {
         val newSelectedDates = currentSelectedDates.toMutableMap()
 
-        this.forEach { (monthYear, dates) ->
+        forEach { (monthYear, dates) ->
             val existingValuesForKey =
                 currentSelectedDates[monthYear] ?: emptyList()
             val mergedDates =
@@ -115,7 +119,7 @@ object CalendarExportUtils {
             newSelectedDates[monthYear] = mergedDates
         }
 
-        return newSelectedDates
+        return newSelectedDates.toImmutableMap()
     }
 
     private fun ImmutableSelectedDates.removeDuplicatedDates(): ImmutableSelectedDates {
@@ -140,6 +144,6 @@ object CalendarExportUtils {
             }
 
             datesWithoutDuplications.values.toPersistentList()
-        }
+        }.toImmutableMap()
     }
 }

@@ -3,7 +3,6 @@ package com.example.daterangeexporter.calendarExport.localComposables
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,10 +26,11 @@ import com.example.daterangeexporter.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarExportTopBar(
-    onUpNavigation: () -> Boolean,
     onEditCalendar: () -> Unit,
     onClearSelectedDates: () -> Unit,
+    onAddNewDateRange: () -> Unit,
     onLabelAssign: () -> Unit,
+    onExportCalendar: () -> Unit,
     isSelectedDatesEmpty: Boolean,
     calendarHasLabelAssigned: Boolean,
     modifier: Modifier = Modifier,
@@ -47,15 +47,6 @@ fun CalendarExportTopBar(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 8.dp)
             )
-        },
-        navigationIcon = {
-            IconButton(onClick = { onUpNavigation() }) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
         },
         actions = {
             Column {
@@ -81,9 +72,16 @@ fun CalendarExportTopBar(
 
                         isMenuDropDownVisible = false
                     },
+                    onAddNewDateRange = {
+                        onAddNewDateRange()
+                        isMenuDropDownVisible = false
+                    },
                     onLabelAssign = {
                         onLabelAssign()
-
+                        isMenuDropDownVisible = false
+                    },
+                    onExportCalendar = {
+                        onExportCalendar()
                         isMenuDropDownVisible = false
                     },
                     onDismiss = { isMenuDropDownVisible = false },

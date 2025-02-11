@@ -3,8 +3,10 @@ package com.example.daterangeexporter.calendarExport.localComposables
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -18,14 +20,15 @@ import androidx.compose.ui.unit.dp
 import com.example.daterangeexporter.R
 import com.example.daterangeexporter.core.theme.AppTheme
 
-
 @Composable
 fun CalendarExportTopBarDropDownMenu(
     isVisible: Boolean,
     hasDatesSelected: Boolean,
     hasLabelAssigned: Boolean,
     onDatesSelect: () -> Unit,
+    onAddNewDateRange: () -> Unit,
     onLabelAssign: () -> Unit,
+    onExportCalendar: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -61,24 +64,62 @@ fun CalendarExportTopBarDropDownMenu(
             },
             onClick = onDatesSelect,
         )
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Label,
-                    contentDescription = stringResource(secondActionLabel),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(secondActionLabel),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                )
-            },
-            onClick = onLabelAssign,
-        )
+        if (hasDatesSelected) {
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_other_date_range_action_text),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.add_other_date_range_action_text),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                    )
+                },
+                onClick = onAddNewDateRange,
+            )
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.Label,
+                        contentDescription = stringResource(secondActionLabel),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(secondActionLabel),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                    )
+                },
+                onClick = onLabelAssign,
+            )
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = stringResource(R.string.export_calendar_action_content_description),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.export_calendar_action_text),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                    )
+                },
+                onClick = onExportCalendar,
+            )
+        }
     }
 }
 
@@ -93,7 +134,9 @@ fun CalendarExportTopBarDropDownMenuPreview(
             hasDatesSelected = false,
             hasLabelAssigned = false,
             onDatesSelect = {},
+            onAddNewDateRange = {},
             onLabelAssign = {},
+            onExportCalendar = {},
             onDismiss = {},
             modifier = modifier
         )

@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = Destinations.Calendars,
+                    startDestination = Destinations.CalendarExport,
                     builder = { destinations(navController) },
                 )
             }
