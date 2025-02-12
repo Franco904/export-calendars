@@ -51,6 +51,9 @@ android {
 }
 
 dependencies {
+    // Kotlin
+    implementation(libs.kotlin.collections.immutable)
+
     // Android Core
     implementation(libs.androidx.core.ktx)
 
@@ -59,7 +62,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    // Compose
+    // Jetpack Compose
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
 
@@ -72,17 +75,13 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
 
-    // Navigation
-    implementation(libs.androidx.navigation.compose)
-
-    // Kotlin
-    implementation(libs.kotlin.collections.immutable)
+    // Koin (DI)
+    implementation(project.dependencies.platform(libs.koin.bom))
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
 
     // Serialization
     implementation(libs.kotlin.serialization.json)
-
-    // Data storage
-    implementation(libs.androidx.datastore)
 
     // Other
     debugImplementation(libs.androidx.ui.tooling)

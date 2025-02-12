@@ -3,10 +3,22 @@ package com.example.daterangeexporter
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
-import com.example.daterangeexporter.DestinationsHandler.destinations
-import com.example.daterangeexporter.core.theme.AppTheme
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.LayoutDirection
+import com.example.daterangeexporter.calendarExport.CalendarExportScreen
+import com.example.daterangeexporter.calendarExport.CalendarExportViewModel
+import com.example.daterangeexporter.core.application.theme.AppTheme
+import com.example.daterangeexporter.core.presentation.composables.AppSnackbarHost
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,13 +26,32 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                val navController = rememberNavController()
+                val coroutineScope = rememberCoroutineScope()
+                val snackbarHostState = remember { SnackbarHostState() }
 
-                NavHost(
-                    navController = navController,
-                    startDestination = Destinations.CalendarExport,
-                    builder = { destinations(navController) },
-                )
+                Scaffold(
+                    snackbarHost = {
+                        AppSnackbarHost(
+                            snackbarHostState = snackbarHostState,
+                            snackbarContainerColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                ) { contentPadding ->
+
+                    CalendarExportScreen(
+                        viewModel = koinViewModel<CalendarExportViewModel>(),
+                        showSnackbar = { message ->
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(message = message)
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(
+                                start = contentPadding.calculateStartPadding(LayoutDirection.Ltr),
+                                end = contentPadding.calculateEndPadding(LayoutDirection.Ltr),
+                            )
+                    )
+                }
             }
         }
     }

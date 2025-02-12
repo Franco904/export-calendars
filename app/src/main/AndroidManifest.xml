@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:name=".CalendarExportApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -24,7 +25,7 @@
         </activity>
 
         <provider
-            android:name="com.example.daterangeexporter.core.providers.AppFileProvider"
+            android:name="com.example.daterangeexporter.core.application.contentProviders.AppFileProvider"
             android:authorities="com.example.daterangeexporter.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">

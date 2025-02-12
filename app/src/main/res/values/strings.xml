@@ -1,11 +1,8 @@
 <resources>
-    <!--  App general  -->
+    <!--  App  -->
     <string name="app_name">Exportar calendário</string>
 
-    <!--  Calendars  -->
-    <string name="calendars_title">Calendários</string>
-    <string name="year_dropdown_field_placeholder">Ano</string>
-
+    <!--  Base calendar  -->
     <string name="january_label">JANEIRO</string>
     <string name="february_label">FEVEREIRO</string>
     <string name="march_label">MARÇO</string>
@@ -36,11 +33,11 @@
     <string name="export_calendar_action_content_description">Exportar calendário</string>
     <string name="export_calendar_action_text">Compartilhar</string>
 
-    <string name="export_calendar_title">Calendário</string>
+    <string name="export_calendar_title">Calendários</string>
     <string name="edit_calendar_selected_dates_action_text">Selecionar datas</string>
     <string name="clear_calendar_selected_dates_action_text">Limpar seleção</string>
 
-    <string name="date_range_picker_dialog_title">Selecione o período da estadia</string>
+    <string name="date_range_picker_dialog_title">Selecione um intervalo</string>
     <string name="date_range_picker_dialog_primary_button">OK</string>
     <string name="date_range_picker_dialog_secondary_button">Cancelar</string>
 
@@ -49,5 +46,10 @@
     <string name="calendar_label_assign_dialog_field_placeholder">Nome</string>
     <string name="calendar_label_assign_dialog_primary_button">Salvar</string>
     <string name="calendar_label_assign_dialog_secondary_button">Cancelar</string>
+
+    <!--  Error  -->
+    <string name="snackbar_internal_storage_serialization_error">Não foi possível salvar o arquivo. Tente novamente mais tarde.</string>
+    <string name="snackbar_internal_storage_bitmap_compress_error">Não foi possível processar a imagem. Tente novamente mais tarde.</string>
+    <string name="snackbar_internal_storage_unknown_error">Erro desconhecido. Tente novamente mais tarde.</string>
 
 </resources>

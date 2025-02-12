@@ -1,8 +1,7 @@
 package com.example.daterangeexporter.calendarExport
 
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -20,30 +19,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.daterangeexporter.calendarExport.localComposables.CalendarExportTopBar
-import com.example.daterangeexporter.calendarExport.localComposables.CalendarLabelAssignDialog
-import com.example.daterangeexporter.calendarExport.localModels.CalendarMonthYear
-import com.example.daterangeexporter.calendarExport.localModels.CalendarSelectedDate
-import com.example.daterangeexporter.calendarExport.localModels.RangeSelectionLabel
-import com.example.daterangeexporter.core.composables.BaseCalendar
-import com.example.daterangeexporter.core.composables.DateRangePickerDialog
-import com.example.daterangeexporter.core.infra.InternalStorageHandler.saveImage
-import com.example.daterangeexporter.core.theme.AppTheme
-import com.example.daterangeexporter.core.utils.IMAGE_PNG_TYPE
-import com.example.daterangeexporter.core.utils.itemsIndexed
-import com.example.daterangeexporter.core.utils.showShareSheet
+import com.example.daterangeexporter.calendarExport.composables.BaseCalendar
+import com.example.daterangeexporter.calendarExport.composables.CalendarExportTopBar
+import com.example.daterangeexporter.calendarExport.composables.CalendarLabelAssignDialog
+import com.example.daterangeexporter.calendarExport.composables.DateRangePickerDialog
+import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
+import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
+import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
+import com.example.daterangeexporter.calendarExport.utils.CalendarExportUtils
+import com.example.daterangeexporter.core.application.theme.AppTheme
+import com.example.daterangeexporter.core.presentation.utils.IMAGE_PNG_TYPE
+import com.example.daterangeexporter.core.presentation.utils.itemsIndexed
+import com.example.daterangeexporter.core.presentation.utils.showShareSheet
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.delay
+import org.koin.androidx.compose.koinViewModel
 import java.util.Calendar
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -52,7 +48,8 @@ private const val FIXED_VISIBLE_LIST_ITEMS = 0
 @Composable
 fun CalendarExportScreen(
     modifier: Modifier = Modifier,
-    viewModel: CalendarExportViewModel = viewModel(),
+    viewModel: CalendarExportViewModel = koinViewModel(),
+    showSnackbar: (String) -> Unit = { _ -> },
 ) {
     val initialCalendar = remember {
         val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1
@@ -100,6 +97,30 @@ fun CalendarExportScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { uiEvent ->
+            when (uiEvent) {
+                is CalendarExportViewModel.UiEvents.DataSourceError -> {
+                    showSnackbar(context.getString(uiEvent.messageId))
+
+                    isConvertingToBitmap = persistentMapOf()
+                }
+
+                is CalendarExportViewModel.UiEvents.SaveCalendarsBitmapsSuccess -> {
+                    context.showShareSheet(action = Intent.ACTION_SEND_MULTIPLE) {
+                        type = IMAGE_PNG_TYPE
+                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
+                        putParcelableArrayListExtra(
+                            Intent.EXTRA_STREAM,
+                            uiEvent.calendarsContentUris,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.calendarBitmaps
             .collect { calendarBitmaps ->
                 isConvertingToBitmap = isConvertingToBitmap
@@ -115,8 +136,7 @@ fun CalendarExportScreen(
                     delay(150.milliseconds)
                     lazyListState.animateScrollToItem(firstMissingCalendar + FIXED_VISIBLE_LIST_ITEMS)
                 } else {
-                    context.exportCalendars(calendarsBitmaps = calendarBitmaps)
-                    isConvertingToBitmap = persistentMapOf()
+                    viewModel.saveCalendarsBitmaps(bitmaps = calendarBitmaps)
                 }
             }
     }
@@ -159,58 +179,6 @@ fun CalendarExportScreen(
                 .padding(top = contentPadding.calculateTopPadding())
                 .padding(horizontal = 16.dp)
         ) {
-            if (mustShowDateRangePickerDialog) {
-                item {
-                    DateRangePickerDialog(
-                        initialDayOfMonth = selectedDates.values.lastOrNull()
-                            ?.lastOrNull()?.dayOfMonth
-                            ?: currentDayOfMonth.toString(),
-                        initialMonthYear = if (rangeSelectionLabel == RangeSelectionLabel.First.count) {
-                            initialCalendar
-                        } else {
-                            initialCalendar.copy(
-                                month = selectedDates.keys.last().month,
-                                year = selectedDates.keys.last().year,
-                            )
-                        },
-                        onDateRangeSelected = { (startDateTimeMillis, endDateTimeMillis) ->
-                            if (startDateTimeMillis == null || endDateTimeMillis == null) {
-                                return@DateRangePickerDialog
-                            }
-
-                            selectedDates = CalendarExportUtils.getSelectedDates(
-                                startDateTimeMillis = startDateTimeMillis,
-                                endDateTimeMillis = endDateTimeMillis,
-                                currentRangeCount = rangeSelectionLabel,
-                                currentSelectedDates = selectedDates,
-                            )
-
-                            rangeSelectionLabel += 1
-                            mustShowDateRangePickerDialog = false
-                        },
-                        onDismiss = {
-                            mustShowDateRangePickerDialog = false
-                        },
-                        isDateSelectionEmpty = isDateSelectionEmpty,
-                    )
-                }
-            }
-
-            if (mustShowLabelAssignDialog) {
-                item {
-                    CalendarLabelAssignDialog(
-                        input = calendarLabelInput,
-                        onSave = { input ->
-                            calendarLabelInput = input
-                            mustShowLabelAssignDialog = false
-                        },
-                        onCancel = {
-                            mustShowLabelAssignDialog = false
-                        },
-                    )
-                }
-            }
-
             itemsIndexed(
                 selectedDates,
                 key = { i, _ -> i },
@@ -230,7 +198,7 @@ fun CalendarExportScreen(
                     clientNameLabel = calendarLabelInput,
                     selectedDatesWithMonthYear = Pair(calendarMonthYear, monthSelectedDates),
                     isConvertingToBitmap = isConverting,
-                    onConvertedToBitmap = { imageBitmap: ImageBitmap ->
+                    onConvertedToBitmap = { bitmap: Bitmap ->
                         isConvertingToBitmap = isConvertingToBitmap
                             .mapValues { (monthYear, isCurrentConverting) ->
                                 if (monthYear == calendarMonthYear) false else isCurrentConverting
@@ -239,44 +207,61 @@ fun CalendarExportScreen(
 
                         viewModel.emitCalendarBitmap(
                             calendarMonthYear = calendarMonthYear,
-                            imageBitmap = imageBitmap,
+                            bitmap = bitmap,
                         )
                     },
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
-    }
-}
 
-private suspend fun Context.exportCalendars(
-    calendarsBitmaps: Map<CalendarMonthYear, ImageBitmap>,
-) {
-    val contentUris = arrayListOf<Uri>()
+        if (mustShowDateRangePickerDialog) {
+            DateRangePickerDialog(
+                initialDayOfMonth = selectedDates.values.lastOrNull()
+                    ?.lastOrNull()?.dayOfMonth
+                    ?: currentDayOfMonth.toString(),
+                initialMonthYear = if (rangeSelectionLabel == RangeSelectionLabel.First.count) {
+                    initialCalendar
+                } else {
+                    initialCalendar.copy(
+                        month = selectedDates.keys.last().month,
+                        year = selectedDates.keys.last().year,
+                    )
+                },
+                onDateRangeSelected = { (startDateTimeMillis, endDateTimeMillis) ->
+                    if (startDateTimeMillis == null || endDateTimeMillis == null) {
+                        return@DateRangePickerDialog
+                    }
 
-    calendarsBitmaps.forEach { (calendarMonthYear, calendarBitmap) ->
-        val currentTimestamp = Calendar.getInstance().timeInMillis
-        val monthYearString = "${calendarMonthYear.month}${calendarMonthYear.year}"
+                    selectedDates = CalendarExportUtils.getSelectedDates(
+                        startDateTimeMillis = startDateTimeMillis,
+                        endDateTimeMillis = endDateTimeMillis,
+                        currentRangeCount = rangeSelectionLabel,
+                        currentSelectedDates = selectedDates,
+                    )
 
-        val file = saveImage(
-            bitmap = calendarBitmap.asAndroidBitmap(),
-            fileName = "calendar-$monthYearString-$currentTimestamp.png",
-            folder = cacheDir,
-        )
+                    rangeSelectionLabel += 1
+                    mustShowDateRangePickerDialog = false
+                },
+                onDismiss = {
+                    mustShowDateRangePickerDialog = false
+                },
+                isDateSelectionEmpty = isDateSelectionEmpty,
+            )
+        }
 
-        val contentUri = FileProvider.getUriForFile(
-            /* context = */ this,
-            /* authority = */ "${packageName}.fileprovider",
-            file,
-        )
-
-        contentUris.add(contentUri)
-    }
-
-    showShareSheet(action = Intent.ACTION_SEND_MULTIPLE) {
-        type = IMAGE_PNG_TYPE
-        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-        putParcelableArrayListExtra(Intent.EXTRA_STREAM, contentUris)
+        if (mustShowLabelAssignDialog) {
+            CalendarLabelAssignDialog(
+                input = calendarLabelInput,
+                onSave = { input ->
+                    calendarLabelInput = input
+                    mustShowLabelAssignDialog = false
+                },
+                onCancel = {
+                    mustShowLabelAssignDialog = false
+                },
+            )
+        }
     }
 }
 
