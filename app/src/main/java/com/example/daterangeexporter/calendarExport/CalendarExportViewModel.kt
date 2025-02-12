@@ -81,10 +81,6 @@ class CalendarExportViewModel(
         }
     }
 
-    fun clearCalendarBitmaps() {
-        _calendarBitmaps.update { emptyMap() }
-    }
-
     sealed interface UiEvents {
         data class DataSourceError(@StringRes val messageId: Int) : UiEvents
 

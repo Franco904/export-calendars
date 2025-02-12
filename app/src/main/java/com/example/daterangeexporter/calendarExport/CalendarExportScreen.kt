@@ -1,15 +1,36 @@
 package com.example.daterangeexporter.calendarExport
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Label
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -18,10 +39,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.daterangeexporter.R
 import com.example.daterangeexporter.calendarExport.composables.BaseCalendar
 import com.example.daterangeexporter.calendarExport.composables.CalendarExportTopBar
 import com.example.daterangeexporter.calendarExport.composables.CalendarLabelAssignDialog
@@ -31,6 +56,9 @@ import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
 import com.example.daterangeexporter.calendarExport.utils.CalendarExportUtils
 import com.example.daterangeexporter.core.application.theme.AppTheme
+import com.example.daterangeexporter.core.presentation.composables.AppFilledButton
+import com.example.daterangeexporter.core.presentation.composables.AppFilledTonalButton
+import com.example.daterangeexporter.core.presentation.composables.AppOutlinedButton
 import com.example.daterangeexporter.core.presentation.utils.IMAGE_PNG_TYPE
 import com.example.daterangeexporter.core.presentation.utils.itemsIndexed
 import com.example.daterangeexporter.core.presentation.utils.showShareSheet
@@ -43,7 +71,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.util.Calendar
 import kotlin.time.Duration.Companion.milliseconds
 
-private const val FIXED_VISIBLE_LIST_ITEMS = 0
+private const val FIXED_VISIBLE_LIST_ITEMS = 4
 
 @Composable
 fun CalendarExportScreen(
@@ -106,15 +134,9 @@ fun CalendarExportScreen(
                 }
 
                 is CalendarExportViewModel.UiEvents.SaveCalendarsBitmapsSuccess -> {
-                    context.showShareSheet(action = Intent.ACTION_SEND_MULTIPLE) {
-                        type = IMAGE_PNG_TYPE
-                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-
-                        putParcelableArrayListExtra(
-                            Intent.EXTRA_STREAM,
-                            uiEvent.calendarsContentUris,
-                        )
-                    }
+                    context.exportCalendars(
+                        contentUris = uiEvent.calendarsContentUris,
+                    )
                 }
             }
         }
@@ -143,30 +165,7 @@ fun CalendarExportScreen(
 
     Scaffold(
         topBar = {
-            CalendarExportTopBar(
-                onEditCalendar = {
-                    mustShowDateRangePickerDialog = true
-                },
-                onClearSelectedDates = {
-                    rangeSelectionLabel = RangeSelectionLabel.First.count
-                    selectedDates = persistentMapOf()
-
-                    viewModel.clearCalendarBitmaps()
-                },
-                onAddNewDateRange = {
-                    mustShowDateRangePickerDialog = true
-                },
-                onLabelAssign = {
-                    mustShowLabelAssignDialog = true
-                },
-                onExportCalendar = {
-                    isConvertingToBitmap = selectedDates
-                        .mapValues { true }
-                        .toImmutableMap()
-                },
-                isSelectedDatesEmpty = selectedDates.isEmpty(),
-                calendarHasLabelAssigned = !calendarLabelInput.isNullOrBlank(),
-            )
+            CalendarExportTopBar()
         },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
@@ -174,11 +173,87 @@ fun CalendarExportScreen(
     ) { contentPadding ->
         LazyColumn(
             state = lazyListState,
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
                 .padding(horizontal = 16.dp)
         ) {
+            item {
+                PrimaryActionRow(
+                    selectedDates = selectedDates,
+                    onDateRangeSelect = {
+                        mustShowDateRangePickerDialog = true
+                    },
+                    onClearSelection = {
+                        rangeSelectionLabel = RangeSelectionLabel.First.count
+                        selectedDates = persistentMapOf()
+                    },
+                )
+            }
+
+            item {
+                AnimatedVisibility(
+                    visible = selectedDates.isNotEmpty(),
+                    enter = fadeIn(),
+                ) {
+                    SecondaryActionsRow(
+                        onAddNewDateRange = {
+                            mustShowDateRangePickerDialog = true
+                        },
+                        hasLabelAssigned = !calendarLabelInput.isNullOrBlank(),
+                        onLabelAssign = {
+                            mustShowLabelAssignDialog = true
+                        },
+                        onExportCalendar = {
+                            isConvertingToBitmap = selectedDates
+                                .mapValues { true }
+                                .toImmutableMap()
+                        },
+                    )
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item {
+                if (selectedDates.isEmpty()) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .padding(vertical = 32.dp, horizontal = 16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Nenhum período selecionado",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Comece clicando no botão \"Selecionar datas\".",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                color = MaterialTheme.colorScheme.outline,
+                                fontStyle = FontStyle.Italic,
+                            ),
+                        )
+                    }
+                }
+            }
+
             itemsIndexed(
                 selectedDates,
                 key = { i, _ -> i },
@@ -189,9 +264,6 @@ fun CalendarExportScreen(
                         .find { it == i } != null
                 }
 
-                if (i == 0) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
                 BaseCalendar(
                     month = calendarMonthYear.month,
                     year = calendarMonthYear.year,
@@ -262,6 +334,89 @@ fun CalendarExportScreen(
                 },
             )
         }
+    }
+}
+
+@Composable
+fun PrimaryActionRow(
+    selectedDates: ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>,
+    onDateRangeSelect: () -> Unit,
+    onClearSelection: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedContent(
+        targetState = selectedDates.isEmpty(),
+        label = "PrimaryActionRow",
+        modifier = modifier
+    ) { isSelectedDatesEmpty ->
+        Column {
+            Spacer(modifier = Modifier.height(16.dp))
+            if (isSelectedDatesEmpty) {
+                AppFilledButton(
+                    icon = Icons.Default.DateRange,
+                    text = stringResource(R.string.select_calendar_dates_action_text),
+                    onClick = onDateRangeSelect,
+                )
+            } else {
+                AppFilledTonalButton(
+                    icon = Icons.Default.Close,
+                    text = stringResource(R.string.clear_calendar_selected_dates_action_text),
+                    onClick = onClearSelection,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SecondaryActionsRow(
+    onAddNewDateRange: () -> Unit,
+    hasLabelAssigned: Boolean,
+    onLabelAssign: () -> Unit,
+    onExportCalendar: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val secondActionLabel = if (hasLabelAssigned) {
+        R.string.rename_calendar_action_text
+    } else R.string.assign_calendar_label_action_text
+
+    Column {
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = modifier
+                .fillMaxWidth()
+        ) {
+            AppOutlinedButton(
+                icon = Icons.Default.Add,
+                text = stringResource(R.string.add_other_date_range_action_text),
+                onClick = onAddNewDateRange,
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            AppOutlinedButton(
+                icon = Icons.AutoMirrored.Outlined.Label,
+                text = stringResource(secondActionLabel),
+                onClick = onLabelAssign,
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            AppOutlinedButton(
+                icon = Icons.Default.Share,
+                text = stringResource(R.string.export_calendar_action_text),
+                onClick = onExportCalendar,
+            )
+        }
+    }
+}
+
+private fun Context.exportCalendars(
+    contentUris: ArrayList<Uri>,
+) {
+    showShareSheet(action = Intent.ACTION_SEND_MULTIPLE) {
+        type = IMAGE_PNG_TYPE
+        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
+        putParcelableArrayListExtra(Intent.EXTRA_STREAM, contentUris)
     }
 }
 

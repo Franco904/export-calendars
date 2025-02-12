@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
                     snackbarHost = {
                         AppSnackbarHost(
                             snackbarHostState = snackbarHostState,
-                            snackbarContainerColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            snackbarContainerColor = MaterialTheme.colorScheme.inverseSurface,
                         )
                     },
                 ) { contentPadding ->

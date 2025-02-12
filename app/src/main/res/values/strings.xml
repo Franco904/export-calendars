@@ -1,6 +1,6 @@
 <resources>
     <!--  App  -->
-    <string name="app_name">Exportar calendário</string>
+    <string name="app_name">Exportar calendários</string>
 
     <!--  Base calendar  -->
     <string name="january_label">JANEIRO</string>
@@ -25,24 +25,22 @@
     <string name="saturday_label">S</string>
 
     <!--  Calendar export  -->
-    <string name="more_options_action_content_description">Ver opções</string>
-    <string name="assign_name_calendar_action_text">Adicionar nome</string>
-    <string name="rename_calendar_action_text">Renomear</string>
+    <string name="export_calendar_title">Seleção de período de datas</string>
 
-    <string name="add_other_date_range_action_text">Adicionar outro período</string>
-    <string name="export_calendar_action_content_description">Exportar calendário</string>
-    <string name="export_calendar_action_text">Compartilhar</string>
-
-    <string name="export_calendar_title">Calendários</string>
-    <string name="edit_calendar_selected_dates_action_text">Selecionar datas</string>
+    <string name="select_calendar_dates_action_text">Selecionar datas</string>
     <string name="clear_calendar_selected_dates_action_text">Limpar seleção</string>
 
-    <string name="date_range_picker_dialog_title">Selecione um intervalo</string>
+    <string name="assign_calendar_label_action_text">Adicionar marcador</string>
+    <string name="rename_calendar_action_text">Renomear marcador</string>
+    <string name="add_other_date_range_action_text">Selecionar outro</string>
+    <string name="export_calendar_action_text">Compartilhar</string>
+
+    <string name="date_range_picker_dialog_title">Selecione um período</string>
     <string name="date_range_picker_dialog_primary_button">OK</string>
     <string name="date_range_picker_dialog_secondary_button">Cancelar</string>
 
-    <string name="calendar_label_assign_dialog_title_assign">Adicionar nome do cliente</string>
-    <string name="calendar_label_assign_dialog_title_rename">Renomear cliente</string>
+    <string name="calendar_label_assign_dialog_title_assign">Adicionar marcador</string>
+    <string name="calendar_label_assign_dialog_title_rename">Renomear marcador</string>
     <string name="calendar_label_assign_dialog_field_placeholder">Nome</string>
     <string name="calendar_label_assign_dialog_primary_button">Salvar</string>
     <string name="calendar_label_assign_dialog_secondary_button">Cancelar</string>

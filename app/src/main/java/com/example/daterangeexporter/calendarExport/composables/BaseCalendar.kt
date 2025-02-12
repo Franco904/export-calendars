@@ -58,10 +58,8 @@ fun BaseCalendar(
     month: Int,
     year: Int,
     modifier: Modifier = Modifier,
-    showYearLabel: Boolean = true,
     clientNameLabel: String? = null,
     selectedDatesWithMonthYear: Pair<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>? = null,
-    onCardSelect: () -> Unit = {},
     isConvertingToBitmap: Boolean = false,
     onConvertedToBitmap: (Bitmap) -> Unit = {},
 ) {
@@ -97,7 +95,6 @@ fun BaseCalendar(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
         shape = MaterialTheme.shapes.small,
-        onClick = onCardSelect,
         modifier = modifier
             .border(
                 width = 1.dp,
@@ -125,7 +122,7 @@ fun BaseCalendar(
             ) {
                 MonthLabelSection(
                     monthLabel = monthLabel,
-                    year = if (showYearLabel) year else null,
+                    year = year,
                     modifier = Modifier
                         .weight(1f)
                 )
