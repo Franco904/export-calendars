@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -50,6 +51,7 @@ import com.example.daterangeexporter.core.application.theme.AppTheme
 import com.example.daterangeexporter.core.presentation.utils.CalendarUtils
 import com.example.daterangeexporter.core.presentation.utils.CalendarUtils.getMonthLabelByNumber
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
@@ -96,6 +98,7 @@ fun BaseCalendar(
         ),
         shape = MaterialTheme.shapes.small,
         modifier = modifier
+            .widthIn(max = 400.dp)
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -110,7 +113,7 @@ fun BaseCalendar(
             }
     ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .padding(
                     top = if (!clientNameLabel.isNullOrBlank()) 8.dp else 16.dp,
                     end = 16.dp,
@@ -194,33 +197,39 @@ fun DatesSection(
             )
         }
 
+        // TODO: Improve logic to add a isSelected attr to CalendarSelectedDate and use it here
         items(daysOfMonth) { day ->
-            val calendarDayModifier =
-                if (day.length == 1) Modifier.offset(x = (-0.5).dp) else Modifier
+            val selectedDaysOfMonth = selectedDatesWithMonthYear?.second?.map { it.dayOfMonth }
 
-            val paddingBottom =
-                if (day in daysOfMonth.takeLast(7)) 0.dp else 24.dp
+            if (selectedDatesWithMonthYear == null || day !in selectedDaysOfMonth!!) {
+                val paddingBottom = if (day in daysOfMonth.takeLast(7)) 0.dp else 24.dp
 
-            if (selectedDatesWithMonthYear == null) {
                 CalendarDate(
                     dayText = day,
-                    modifier = calendarDayModifier
-                        .wrapContentSize()
+                    modifier = Modifier
                         .padding(bottom = paddingBottom)
+                        .offset(
+                            x = if (day.length == 1) (-0.5).dp else 0.dp,
+                        )
                 )
             } else {
-                val selectedDates = selectedDatesWithMonthYear.second
-                val selectedDate = selectedDates.find { it.dayOfMonth == day }
+                val selectedDate = selectedDatesWithMonthYear.second.find { it.dayOfMonth == day }
+
+                val paddingBottom = when {
+                    day in daysOfMonth.takeLast(7) -> 0.dp
+                    selectedDate != null -> 16.dp
+                    else -> 24.dp
+                }
 
                 CalendarDate(
                     dayText = day,
                     selectedDate = selectedDate,
-                    modifier = calendarDayModifier
-                        .wrapContentSize()
-                        .padding(
-                            bottom = if (selectedDate != null) 16.dp else paddingBottom
+                    modifier = Modifier
+                        .padding(bottom = paddingBottom)
+                        .offset(
+                            x = if (day.length == 1) (-0.5).dp else 0.dp,
+                            y = if (selectedDate != null) (-5.5).dp else 0.dp,
                         )
-                        .offset(y = if (selectedDate != null) (-5.5).dp else 0.dp)
                 )
             }
         }
@@ -353,8 +362,128 @@ fun BaseCalendarPreview(
         BaseCalendar(
             month = 1,
             year = 2025,
-            clientNameLabel = "Franco Saravia Tavares",
-            isConvertingToBitmap = true,
+            selectedDatesWithMonthYear = Pair(
+                CalendarMonthYear(-1, 1, 2025),
+                persistentListOf(
+//                    CalendarSelectedDate("1", rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First),
+//                    CalendarSelectedDate("2", rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First),
+//                    CalendarSelectedDate("3", rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First),
+                    CalendarSelectedDate(
+                        "4",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "5",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "6",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "7",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "8",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "9",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "10",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "11",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "12",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "13",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "14",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "15",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "16",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "17",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "18",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "19",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "20",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "21",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "22",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "23",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "24",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "25",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "26",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "27",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "28",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "29",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "30",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                    CalendarSelectedDate(
+                        "31",
+                        rangeSelectionLabel = RangeSelectionLabel.First to RangeSelectionLabel.First
+                    ),
+                ),
+            ),
+            clientNameLabel = "Franco",
+            isConvertingToBitmap = false,
             onConvertedToBitmap = {},
             modifier = modifier,
         )

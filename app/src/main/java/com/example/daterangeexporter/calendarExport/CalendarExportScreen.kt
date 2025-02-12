@@ -100,7 +100,6 @@ fun CalendarExportScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier
-            .fillMaxSize()
     ) { contentPadding ->
         LazyColumn(
             state = lazyListState,
