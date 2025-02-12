@@ -3,9 +3,12 @@ package com.example.daterangeexporter
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -24,12 +27,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        enableEdgeToEdge()
+
         setContent {
             AppTheme {
                 val coroutineScope = rememberCoroutineScope()
                 val snackbarHostState = remember { SnackbarHostState() }
 
                 Scaffold(
+                    contentWindowInsets = WindowInsets.safeDrawing, // adds padding for system's cutouts
                     snackbarHost = {
                         AppSnackbarHost(
                             snackbarHostState = snackbarHostState,
@@ -49,6 +55,7 @@ class MainActivity : ComponentActivity() {
                             .padding(
                                 start = contentPadding.calculateStartPadding(LayoutDirection.Ltr),
                                 end = contentPadding.calculateEndPadding(LayoutDirection.Ltr),
+                                bottom = contentPadding.calculateBottomPadding(),
                             )
                     )
                 }
