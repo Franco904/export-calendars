@@ -11,4 +11,6 @@ interface CalendarsRepository {
         fileName: String,
         parentFolder: File? = null,
     ): Result<File, DataSourceError>
+
+    suspend fun clearCacheDir(): Result<Unit, DataSourceError>
 }

@@ -36,4 +36,18 @@ class InternalStorageImpl(
             throw e.asInternalStorageException()
         }
     }
+
+    override suspend fun clearCacheDir() {
+        try {
+            withContext(Dispatchers.IO) {
+                appContext.cacheDir?.listFiles { cacheFile ->
+                    cacheFile.deleteRecursively()
+                }
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            throw e.asInternalStorageException()
+        }
+    }
 }

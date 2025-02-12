@@ -37,6 +37,22 @@ class CalendarsRepositoryImpl(
         }
     }
 
+    override suspend fun clearCacheDir(): Result<Unit, DataSourceError> {
+        return try {
+            internalStorage.clearCacheDir()
+            Result.Success(data = Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "saveCalendarBitmap - ${e.message}")
+
+            val error = when (e) {
+                is InternalStorageException -> e.toInternalStorageError()
+                else -> throw e
+            }
+
+            Result.Error(error = error)
+        }
+    }
+
     companion object {
         private const val TAG = "CalendarsRepositoryImpl"
     }

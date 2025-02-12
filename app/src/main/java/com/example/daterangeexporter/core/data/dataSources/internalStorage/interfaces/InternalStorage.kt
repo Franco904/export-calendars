@@ -9,4 +9,6 @@ interface InternalStorage {
         fileName: String,
         parentFolder: File? = null,
     ): File
+
+    suspend fun clearCacheDir()
 }

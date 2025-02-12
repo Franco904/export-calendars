@@ -147,6 +147,12 @@ class CalendarExportViewModel(
 
     private fun saveCalendarsBitmaps() {
         viewModelScope.launch {
+            calendarsRepository.clearCacheDir()
+                .onError { error ->
+                    _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
+                    return@launch
+                }
+
             val contentUris = arrayListOf<Uri>()
 
             _convertedCalendarsBitmaps.value.forEach { (calendarMonthYear, calendarBitmap) ->
