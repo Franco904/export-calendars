@@ -25,7 +25,7 @@
     <string name="saturday_label">S</string>
 
     <!--  Calendar export  -->
-    <string name="export_calendar_title">Seleção de período de datas</string>
+    <string name="export_calendar_title">Seleção de períodos de datas</string>
 
     <string name="export_calendar_empty_screen_title">Nenhum período selecionado</string>
     <string name="export_calendar_empty_screen_description">Comece clicando no botão \"Selecionar datas\".</string>

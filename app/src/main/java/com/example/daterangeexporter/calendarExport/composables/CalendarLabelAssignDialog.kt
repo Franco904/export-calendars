@@ -41,7 +41,7 @@ fun CalendarLabelAssignDialog(
 ) {
     val fieldFocusRequester = remember { FocusRequester() }
 
-    var labelInput by remember { mutableStateOf(input) }
+    var labelInput by remember(input) { mutableStateOf(input) }
 
     val titleResId = if (!input.isNullOrBlank()) {
         R.string.calendar_label_assign_dialog_title_rename
@@ -50,10 +50,6 @@ fun CalendarLabelAssignDialog(
     LaunchedEffect(Unit) {
         delay(250.milliseconds)
         fieldFocusRequester.requestFocus()
-    }
-
-    LaunchedEffect(input) {
-        labelInput = input
     }
 
     AlertDialog(

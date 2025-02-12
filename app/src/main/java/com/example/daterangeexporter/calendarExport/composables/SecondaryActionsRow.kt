@@ -24,7 +24,7 @@ fun SecondaryActionsRow(
     onAddNewDateRange: () -> Unit,
     hasLabelAssigned: Boolean,
     onLabelAssign: () -> Unit,
-    onExportCalendar: () -> Unit,
+    onExportCalendars: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val secondActionLabel = if (hasLabelAssigned) {
@@ -54,7 +54,7 @@ fun SecondaryActionsRow(
             AppOutlinedButton(
                 icon = Icons.Default.Share,
                 text = stringResource(R.string.export_calendar_action_text),
-                onClick = onExportCalendar,
+                onClick = onExportCalendars,
             )
         }
     }
