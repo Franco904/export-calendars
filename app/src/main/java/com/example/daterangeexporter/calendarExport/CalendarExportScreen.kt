@@ -15,22 +15,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -43,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.daterangeexporter.R
@@ -51,6 +46,9 @@ import com.example.daterangeexporter.calendarExport.composables.BaseCalendar
 import com.example.daterangeexporter.calendarExport.composables.CalendarExportTopBar
 import com.example.daterangeexporter.calendarExport.composables.CalendarLabelAssignDialog
 import com.example.daterangeexporter.calendarExport.composables.DateRangePickerDialog
+import com.example.daterangeexporter.calendarExport.composables.NoSelectedDatesEmptySection
+import com.example.daterangeexporter.calendarExport.composables.PrimaryActionRow
+import com.example.daterangeexporter.calendarExport.composables.SecondaryActionsRow
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
@@ -222,35 +220,7 @@ fun CalendarExportScreen(
 
             item {
                 if (selectedDates.isEmpty()) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .padding(vertical = 32.dp, horizontal = 16.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Nenhum período selecionado",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Comece clicando no botão \"Selecionar datas\".",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                color = MaterialTheme.colorScheme.outline,
-                                fontStyle = FontStyle.Italic,
-                            ),
-                        )
-                    }
+                    NoSelectedDatesEmptySection()
                 }
             }
 
@@ -332,78 +302,6 @@ fun CalendarExportScreen(
                 onCancel = {
                     mustShowLabelAssignDialog = false
                 },
-            )
-        }
-    }
-}
-
-@Composable
-fun PrimaryActionRow(
-    selectedDates: ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>,
-    onDateRangeSelect: () -> Unit,
-    onClearSelection: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    AnimatedContent(
-        targetState = selectedDates.isEmpty(),
-        label = "PrimaryActionRow",
-        modifier = modifier
-    ) { isSelectedDatesEmpty ->
-        Column {
-            Spacer(modifier = Modifier.height(16.dp))
-            if (isSelectedDatesEmpty) {
-                AppFilledButton(
-                    icon = Icons.Default.DateRange,
-                    text = stringResource(R.string.select_calendar_dates_action_text),
-                    onClick = onDateRangeSelect,
-                )
-            } else {
-                AppFilledTonalButton(
-                    icon = Icons.Default.Close,
-                    text = stringResource(R.string.clear_calendar_selected_dates_action_text),
-                    onClick = onClearSelection,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SecondaryActionsRow(
-    onAddNewDateRange: () -> Unit,
-    hasLabelAssigned: Boolean,
-    onLabelAssign: () -> Unit,
-    onExportCalendar: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val secondActionLabel = if (hasLabelAssigned) {
-        R.string.rename_calendar_action_text
-    } else R.string.assign_calendar_label_action_text
-
-    Column {
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = modifier
-                .fillMaxWidth()
-        ) {
-            AppOutlinedButton(
-                icon = Icons.Default.Add,
-                text = stringResource(R.string.add_other_date_range_action_text),
-                onClick = onAddNewDateRange,
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            AppOutlinedButton(
-                icon = Icons.AutoMirrored.Outlined.Label,
-                text = stringResource(secondActionLabel),
-                onClick = onLabelAssign,
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            AppOutlinedButton(
-                icon = Icons.Default.Share,
-                text = stringResource(R.string.export_calendar_action_text),
-                onClick = onExportCalendar,
             )
         }
     }

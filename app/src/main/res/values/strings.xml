@@ -27,6 +27,9 @@
     <!--  Calendar export  -->
     <string name="export_calendar_title">Seleção de período de datas</string>
 
+    <string name="export_calendar_empty_screen_title">Nenhum período selecionado</string>
+    <string name="export_calendar_empty_screen_description">Comece clicando no botão \"Selecionar datas\".</string>
+
     <string name="select_calendar_dates_action_text">Selecionar datas</string>
     <string name="clear_calendar_selected_dates_action_text">Limpar seleção</string>
 
