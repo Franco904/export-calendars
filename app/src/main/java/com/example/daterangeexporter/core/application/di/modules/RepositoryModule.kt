@@ -8,6 +8,7 @@ val repositoryModule = module {
     single<CalendarsRepository> {
         CalendarsRepositoryImpl(
             internalStorage = get(),
+            logger = get(),
         )
     }
 }

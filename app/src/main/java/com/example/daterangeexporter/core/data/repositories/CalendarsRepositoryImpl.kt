@@ -1,7 +1,7 @@
 package com.example.daterangeexporter.core.data.repositories
 
 import android.graphics.Bitmap
-import android.util.Log
+import com.example.daterangeexporter.core.application.monitoring.interfaces.AppLogger
 import com.example.daterangeexporter.core.data.dataSources.internalStorage.interfaces.InternalStorage
 import com.example.daterangeexporter.core.data.exceptions.InternalStorageException
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
@@ -11,6 +11,7 @@ import java.io.File
 
 class CalendarsRepositoryImpl(
     private val internalStorage: InternalStorage,
+    private val logger: AppLogger,
 ) : CalendarsRepository {
     override suspend fun saveCalendarBitmap(
         bitmap: Bitmap,
@@ -26,7 +27,7 @@ class CalendarsRepositoryImpl(
 
             Result.Success(data = file)
         } catch (e: Exception) {
-            Log.e(TAG, "saveCalendarBitmap - ${e.message}")
+            logger.logError(TAG, "saveCalendarBitmap - ${e.message}")
 
             val error = when (e) {
                 is InternalStorageException -> e.toInternalStorageError()
@@ -40,9 +41,10 @@ class CalendarsRepositoryImpl(
     override suspend fun clearCacheDir(): Result<Unit, DataSourceError> {
         return try {
             internalStorage.clearCacheDir()
+
             Result.Success(data = Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "saveCalendarBitmap - ${e.message}")
+            logger.logError(TAG, "clearCacheDir - ${e.message}")
 
             val error = when (e) {
                 is InternalStorageException -> e.toInternalStorageError()

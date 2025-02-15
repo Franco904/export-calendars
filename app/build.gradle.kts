@@ -48,6 +48,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -82,6 +88,12 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlin.serialization.json)
+
+    // Testing
+    testImplementation(libs.junit5.engine)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kluent)
+    testImplementation(libs.mockk)
 
     // Other
     debugImplementation(libs.androidx.ui.tooling)
