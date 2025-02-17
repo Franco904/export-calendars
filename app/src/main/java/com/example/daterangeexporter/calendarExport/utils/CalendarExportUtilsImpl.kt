@@ -3,51 +3,52 @@ package com.example.daterangeexporter.calendarExport.utils
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableMap
+import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExportUtils
+import com.example.daterangeexporter.calendarExport.utils.interfaces.ImmutableSelectedDates
+import com.example.daterangeexporter.calendarExport.utils.interfaces.MutableSelectedDates
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toPersistentList
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Calendar
-import java.util.TimeZone
 
-typealias MutableSelectedDates = ImmutableMap<CalendarMonthYear, MutableList<CalendarSelectedDate>>
-typealias ImmutableSelectedDates = ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>
-
-object CalendarExportUtils {
-    fun getSelectedDates(
+class CalendarExportUtilsImpl(
+    private val startDateCalendar: Calendar,
+    private val endDateCalendar: Calendar,
+) : CalendarExportUtils {
+    override fun getSelectedDates(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
         currentRangeCount: Int,
         currentSelectedDates: ImmutableSelectedDates,
     ): ImmutableSelectedDates {
-        return getRangeDatesGroupedByMonthAndYear(
+        val selectedDates = getRangeDatesGroupedByMonthAndYear(
             startDateTimeMillis = startDateTimeMillis,
             endDateTimeMillis = endDateTimeMillis,
         )
             .populateRangeSelectionLabels(currentRangeCount = currentRangeCount)
             .mergeToExistingDates(currentSelectedDates = currentSelectedDates)
             .removeDuplicatedDates()
+
+        return selectedDates
     }
 
     private fun getRangeDatesGroupedByMonthAndYear(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
     ): MutableSelectedDates {
-        val startDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            .apply { timeInMillis = startDateTimeMillis }
+        val startDateUpdatedCalendar =
+            startDateCalendar.apply { timeInMillis = startDateTimeMillis }
+        val endDateUpdatedCalendar =
+            endDateCalendar.apply { timeInMillis = endDateTimeMillis }
 
-        val endDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            .apply { timeInMillis = endDateTimeMillis }
+        val startDayOfMonth = startDateUpdatedCalendar.get(Calendar.DAY_OF_MONTH)
+        val startMonth = startDateUpdatedCalendar.get(Calendar.MONTH) + 1
+        val startYear = startDateUpdatedCalendar.get(Calendar.YEAR)
 
-        val startDayOfMonth = startDateCalendar.get(Calendar.DAY_OF_MONTH)
-        val startMonth = startDateCalendar.get(Calendar.MONTH) + 1
-        val startYear = startDateCalendar.get(Calendar.YEAR)
-
-        val endDayOfMonth = endDateCalendar.get(Calendar.DAY_OF_MONTH)
-        val endMonth = endDateCalendar.get(Calendar.MONTH) + 1
-        val endYear = endDateCalendar.get(Calendar.YEAR)
+        val endDayOfMonth = endDateUpdatedCalendar.get(Calendar.DAY_OF_MONTH)
+        val endMonth = endDateUpdatedCalendar.get(Calendar.MONTH) + 1
+        val endYear = endDateUpdatedCalendar.get(Calendar.YEAR)
 
         var startDate = YearMonth.of(startYear, startMonth).atDay(startDayOfMonth)
         val endDate = YearMonth.of(endYear, endMonth).atDay(endDayOfMonth)

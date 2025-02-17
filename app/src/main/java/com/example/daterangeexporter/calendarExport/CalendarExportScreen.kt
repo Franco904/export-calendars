@@ -55,14 +55,14 @@ fun CalendarExportScreen(
 
     val lazyListState = rememberLazyListState()
 
-    val rangeSelectionLabel by viewModel.rangeSelectionLabel.collectAsStateWithLifecycle()
+    val rangeSelectionCount by viewModel.rangeSelectionCount.collectAsStateWithLifecycle()
     val selectedDates by viewModel.selectedDates.collectAsStateWithLifecycle()
     val isDateSelectionEmpty =
-        selectedDates.isEmpty() || rangeSelectionLabel >= RangeSelectionLabel.Second.count
+        selectedDates.isEmpty() || rangeSelectionCount >= RangeSelectionLabel.Second.count
 
     val calendarLabelInput by viewModel.calendarLabelInput.collectAsStateWithLifecycle()
 
-    val isConvertingToBitmap by viewModel.isConvertingToBitmap.collectAsStateWithLifecycle()
+    val calendarsBitmaps by viewModel.calendarsBitmaps.collectAsStateWithLifecycle()
     val visibleItems by remember {
         derivedStateOf {
             lazyListState.layoutInfo.visibleItemsInfo.map { it.index - FIXED_VISIBLE_LIST_ITEMS }
@@ -148,9 +148,11 @@ fun CalendarExportScreen(
                 key = { i, _ -> i },
                 contentType = { _, entryType -> entryType }
             ) { i, (calendarMonthYear, monthSelectedDates) ->
-                val isConverting = remember(isConvertingToBitmap, visibleItems) {
-                    isConvertingToBitmap[calendarMonthYear] ?: false && visibleItems
-                        .find { it == i } != null
+                val isConvertingToBitmap = remember(calendarsBitmaps, visibleItems) {
+                    val isBitmapMissing = calendarsBitmaps[calendarMonthYear] == null
+                    val isItemVisible = visibleItems.find { it == i } != null
+
+                    calendarsBitmaps.isNotEmpty() && isBitmapMissing && isItemVisible
                 }
 
                 BaseCalendar(
@@ -158,7 +160,7 @@ fun CalendarExportScreen(
                     year = calendarMonthYear.year,
                     clientNameLabel = calendarLabelInput,
                     selectedDatesWithMonthYear = Pair(calendarMonthYear, monthSelectedDates),
-                    isConvertingToBitmap = isConverting,
+                    isConvertingToBitmap = isConvertingToBitmap,
                     onConvertedToBitmap = { bitmap: Bitmap ->
                         viewModel.onConvertedCalendarToBitmap(
                             calendarMonthYear = calendarMonthYear,
@@ -175,7 +177,7 @@ fun CalendarExportScreen(
                 initialDayOfMonth = selectedDates.values.lastOrNull()
                     ?.lastOrNull()?.dayOfMonth
                     ?: viewModel.currentDayOfMonth.toString(),
-                initialMonthYear = if (rangeSelectionLabel == RangeSelectionLabel.First.count) {
+                initialMonthYear = if (rangeSelectionCount == RangeSelectionLabel.First.count) {
                     viewModel.initialCalendar
                 } else {
                     viewModel.initialCalendar.copy(

@@ -16,7 +16,7 @@ class InternalStorageImpl(
     override suspend fun saveImage(
         bitmap: Bitmap,
         fileName: String,
-        parentFolder: File?
+        parentFolder: File?,
     ): File {
         try {
             val file = if (parentFolder != null) {

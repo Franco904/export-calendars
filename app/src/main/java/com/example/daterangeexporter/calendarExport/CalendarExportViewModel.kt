@@ -10,7 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
-import com.example.daterangeexporter.calendarExport.utils.CalendarExportUtils
+import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExportUtils
+import com.example.daterangeexporter.core.application.contentProviders.interfaces.AppFileProviderHandler
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
 import com.example.daterangeexporter.core.domain.utils.onError
 import com.example.daterangeexporter.core.domain.utils.onSuccess
@@ -31,26 +32,20 @@ import java.util.Calendar
 import kotlin.time.Duration.Companion.milliseconds
 
 class CalendarExportViewModel(
+    private val calendar: Calendar,
     private val appContext: Context,
     private val calendarsRepository: CalendarsRepository,
+    private val calendarExportUtils: CalendarExportUtils,
+    private val appFileProviderHandler: AppFileProviderHandler,
 ) : ViewModel() {
-    private val calendar = Calendar.getInstance()
-
     private val _uiEvents = Channel<UiEvents>()
     val uiEvents = _uiEvents.receiveAsFlow()
 
     val currentDayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
-    private val currentMonth = calendar.get(Calendar.MONTH) + 1
-    private val currentYear = calendar.get(Calendar.YEAR)
+    val initialCalendar = CalendarMonthYear.fromCalendar(calendar)
 
-    val initialCalendar = CalendarMonthYear(
-        id = currentMonth + currentYear,
-        month = currentMonth,
-        year = currentYear,
-    )
-
-    private val _rangeSelectionLabel = MutableStateFlow(RangeSelectionLabel.First.count)
-    val rangeSelectionLabel = _rangeSelectionLabel.asStateFlow()
+    private val _rangeSelectionCount = MutableStateFlow(RangeSelectionLabel.First.count)
+    val rangeSelectionCount = _rangeSelectionCount.asStateFlow()
 
     private val _selectedDates =
         MutableStateFlow<ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>>(
@@ -61,33 +56,29 @@ class CalendarExportViewModel(
     private val _calendarLabelInput = MutableStateFlow<String?>(null)
     val calendarLabelInput = _calendarLabelInput.asStateFlow()
 
-    private val _isConvertingToBitmap = MutableStateFlow<ImmutableMap<CalendarMonthYear, Boolean>>(
+    private val _calendarsBitmaps = MutableStateFlow<ImmutableMap<CalendarMonthYear, Bitmap?>>(
         persistentMapOf()
     )
-    val isConvertingToBitmap = _isConvertingToBitmap.asStateFlow()
-
-    private val _convertedCalendarsBitmaps = MutableStateFlow<Map<CalendarMonthYear, Bitmap>>(
-        emptyMap()
-    )
+    val calendarsBitmaps = _calendarsBitmaps.asStateFlow()
 
     fun onDateRangeSelected(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
     ) {
         _selectedDates.update {
-            CalendarExportUtils.getSelectedDates(
+            calendarExportUtils.getSelectedDates(
                 startDateTimeMillis = startDateTimeMillis,
                 endDateTimeMillis = endDateTimeMillis,
-                currentRangeCount = rangeSelectionLabel.value,
+                currentRangeCount = rangeSelectionCount.value,
                 currentSelectedDates = selectedDates.value,
             )
         }
 
-        _rangeSelectionLabel.update { it + 1 }
+        _rangeSelectionCount.update { it + 1 }
     }
 
     fun onClearDateRangeSelection() {
-        _rangeSelectionLabel.update { RangeSelectionLabel.First.count }
+        _rangeSelectionCount.update { RangeSelectionLabel.First.count }
         _selectedDates.update { persistentMapOf() }
         _calendarLabelInput.update { null }
     }
@@ -97,24 +88,28 @@ class CalendarExportViewModel(
     }
 
     fun onStartCalendarsExport() {
-        _isConvertingToBitmap.update {
+        _calendarsBitmaps.update {
             _selectedDates.value
-                .mapValues { true }
+                .mapValues { null }
                 .toImmutableMap()
         }
 
         viewModelScope.launch {
-            _convertedCalendarsBitmaps
-                .filter { it.isNotEmpty() }
+            _calendarsBitmaps
+                .filter { it.isNotEmpty() && it.values.any { bitmap -> bitmap != null } }
                 .collect { checkMissingCalendarsBitmaps() }
         }
     }
 
     private suspend fun checkMissingCalendarsBitmaps() {
-        if (isConvertingToBitmap.value.isNotEmpty()) {
+        val isThereAnyCalendarBitmapMissing = calendarsBitmaps.value.values.any { it == null }
+
+        if (isThereAnyCalendarBitmapMissing) {
             val firstMissingCalendarIndex =
-                selectedDates.value.keys.indexOfFirst { monthYear ->
-                    monthYear == isConvertingToBitmap.value.keys.first()
+                selectedDates.value.keys.indexOfFirst { calendar ->
+                    val firstMissingBitmapCalendar =
+                        calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
+                    calendar == firstMissingBitmapCalendar
                 }
 
             delay(150.milliseconds)
@@ -122,26 +117,7 @@ class CalendarExportViewModel(
                 UiEvents.MissingCalendarBitmap(firstMissingBitmapIndex = firstMissingCalendarIndex),
             )
         } else {
-            _isConvertingToBitmap.update { persistentMapOf() }
-
             saveCalendarsBitmaps()
-        }
-    }
-
-    fun onConvertedCalendarToBitmap(
-        calendarMonthYear: CalendarMonthYear,
-        bitmap: Bitmap,
-    ) {
-        _isConvertingToBitmap.update {
-            isConvertingToBitmap.value
-                .filterKeys { monthYear -> monthYear != calendarMonthYear }
-                .toImmutableMap()
-        }
-
-        _convertedCalendarsBitmaps.update {
-            it
-                .toMutableMap()
-                .apply { put(calendarMonthYear, bitmap) }
         }
     }
 
@@ -155,37 +131,44 @@ class CalendarExportViewModel(
 
             val contentUris = arrayListOf<Uri>()
 
-            _convertedCalendarsBitmaps.value.forEach { (calendarMonthYear, calendarBitmap) ->
-                val currentTimestamp = Calendar.getInstance().timeInMillis
+            _calendarsBitmaps.value.forEach { (calendarMonthYear, calendarBitmap) ->
+                val currentTimestamp = calendar.timeInMillis
                 val monthYearString = "${calendarMonthYear.month}${calendarMonthYear.year}"
 
                 calendarsRepository.saveCalendarBitmap(
-                    bitmap = calendarBitmap,
+                    bitmap = calendarBitmap!!,
                     fileName = "calendar-$monthYearString-$currentTimestamp.png",
                     parentFolder = appContext.cacheDir,
                 )
                     .onError { error ->
-                        _isConvertingToBitmap.update { persistentMapOf() }
+                        _calendarsBitmaps.update { persistentMapOf() }
 
                         _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
                         return@launch
                     }
                     .onSuccess { file ->
-                        val contentUri = FileProvider.getUriForFile(
-                            /* context = */ appContext,
-                            /* authority = */ "${appContext.packageName}.fileprovider",
-                            file,
-                        )
-
+                        val contentUri = appFileProviderHandler.getUriForInternalAppFile(file)
                         contentUris.add(contentUri)
                     }
             }
 
-            _convertedCalendarsBitmaps.update { emptyMap() }
+            _calendarsBitmaps.update { persistentMapOf() }
 
             _uiEvents.send(
                 UiEvents.SaveCalendarsBitmapsSuccess(calendarsContentUris = contentUris),
             )
+        }
+    }
+
+    fun onConvertedCalendarToBitmap(
+        calendarMonthYear: CalendarMonthYear,
+        bitmap: Bitmap,
+    ) {
+        _calendarsBitmaps.update {
+            it
+                .toMutableMap()
+                .apply { put(calendarMonthYear, bitmap) }
+                .toImmutableMap()
         }
     }
 
