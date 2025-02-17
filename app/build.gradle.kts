@@ -54,6 +54,8 @@ android {
             it.useJUnitPlatform()
         }
     }
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 dependencies {
