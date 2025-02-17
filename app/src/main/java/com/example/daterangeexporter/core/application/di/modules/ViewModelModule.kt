@@ -12,6 +12,7 @@ val viewModelModule = module {
             appContext = get(),
             calendarsRepository = get(),
             calendarExportUtils = get(),
+            appFileProviderHandler = get(),
         )
     }
 }

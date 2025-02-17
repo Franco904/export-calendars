@@ -1,14 +1,17 @@
 package com.example.daterangeexporter.calendarExport
 
 import android.content.Context
+import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExportUtils
 import com.example.daterangeexporter.core.application.contentProviders.interfaces.AppFileProviderHandler
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
 import com.example.daterangeexporter.testUtils.MainDispatcherExtension
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
+import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -16,6 +19,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.util.Calendar
+import kotlin.random.Random
 
 @ExtendWith(MainDispatcherExtension::class)
 class CalendarExportViewModelTest {
@@ -27,11 +31,20 @@ class CalendarExportViewModelTest {
     private lateinit var calendarExportUtilsMock: CalendarExportUtils
     private lateinit var appFileProviderHandlerMock: AppFileProviderHandler
 
+    private val currentDayOfMonthFake = Random.nextInt()
+    private val currentMonthFake = Random.nextInt()
+    private val currentYearFake = Random.nextInt()
+
     @BeforeEach
     fun setUp() {
         mockkStatic(Calendar::class)
 
-        calendarMock = mockk(relaxed = true)
+        calendarMock = mockk(relaxed = true) {
+            every { get(Calendar.DAY_OF_MONTH) } returns currentDayOfMonthFake
+            every { get(Calendar.MONTH) } returns currentMonthFake
+            every { get(Calendar.YEAR) } returns currentYearFake
+        }
+
         appContextMock = mockk(relaxUnitFun = true)
         calendarsRepositoryMock = mockk(relaxUnitFun = true)
         calendarExportUtilsMock = mockk(relaxUnitFun = true)
@@ -56,7 +69,9 @@ class CalendarExportViewModelTest {
     inner class CurrentDayOfMonthTests {
         @Test
         fun `Should hold correct day of month based on the Calendar API`() =
-            runTest { }
+            runTest {
+                sut.currentDayOfMonth shouldBeEqualTo currentDayOfMonthFake
+            }
     }
 
     @Nested
@@ -64,7 +79,15 @@ class CalendarExportViewModelTest {
     inner class InitialCalendarTests {
         @Test
         fun `Should hold correct initial calendar based on the values of current month and year`() =
-            runTest { }
+            runTest {
+                val adjustedMonthFake = currentMonthFake + 1
+
+                sut.initialCalendar shouldBeEqualTo CalendarMonthYear(
+                    id = adjustedMonthFake + currentYearFake,
+                    month = adjustedMonthFake,
+                    year = currentYearFake,
+                )
+            }
     }
 
     @Nested
