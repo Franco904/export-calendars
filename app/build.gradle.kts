@@ -48,12 +48,8 @@ android {
     buildFeatures {
         compose = true
     }
+}
 
-    testOptions {
-        unitTests.all {
-            it.useJUnitPlatform()
-        }
-    }
 tasks.withType<Test> {
     useJUnitPlatform()
 }
