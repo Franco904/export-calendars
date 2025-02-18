@@ -9,7 +9,7 @@ typealias MutableSelectedDates = ImmutableMap<CalendarMonthYear, MutableList<Cal
 typealias ImmutableSelectedDates = ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>
 
 interface CalendarExportUtils {
-    fun getSelectedDates(
+    fun getNewSelectedDates(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
         currentRangeCount: Int,

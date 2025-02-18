@@ -7,15 +7,14 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
-import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
 import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExportUtils
+import com.example.daterangeexporter.calendarExport.utils.interfaces.ImmutableSelectedDates
 import com.example.daterangeexporter.core.application.contentProviders.interfaces.AppFileProviderHandler
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
 import com.example.daterangeexporter.core.domain.utils.onError
 import com.example.daterangeexporter.core.domain.utils.onSuccess
 import com.example.daterangeexporter.core.presentation.utils.toUiMessage
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
@@ -46,10 +45,7 @@ class CalendarExportViewModel(
     private val _rangeSelectionCount = MutableStateFlow(RangeSelectionLabel.First.count)
     val rangeSelectionCount = _rangeSelectionCount.asStateFlow()
 
-    private val _selectedDates =
-        MutableStateFlow<ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>>(
-            persistentMapOf()
-        )
+    private val _selectedDates = MutableStateFlow<ImmutableSelectedDates>(persistentMapOf())
     val selectedDates = _selectedDates.asStateFlow()
 
     private val _calendarLabelInput = MutableStateFlow<String?>(null)
@@ -65,7 +61,7 @@ class CalendarExportViewModel(
         endDateTimeMillis: Long,
     ) {
         _selectedDates.update {
-            calendarExportUtils.getSelectedDates(
+            calendarExportUtils.getNewSelectedDates(
                 startDateTimeMillis = startDateTimeMillis,
                 endDateTimeMillis = endDateTimeMillis,
                 currentRangeCount = rangeSelectionCount.value,

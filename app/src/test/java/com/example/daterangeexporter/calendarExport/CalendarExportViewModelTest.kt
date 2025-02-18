@@ -2,14 +2,22 @@ package com.example.daterangeexporter.calendarExport
 
 import android.content.Context
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
+import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExportUtils
 import com.example.daterangeexporter.core.application.contentProviders.interfaces.AppFileProviderHandler
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
 import com.example.daterangeexporter.testUtils.MainDispatcherExtension
+import com.example.daterangeexporter.testUtils.faker
+import com.example.daterangeexporter.testUtils.fakes.createCalendarMonthYearFake
+import com.example.daterangeexporter.testUtils.fakes.createCalendarSelectedDate
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.AfterEach
@@ -19,7 +27,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.util.Calendar
-import kotlin.random.Random
 
 @ExtendWith(MainDispatcherExtension::class)
 class CalendarExportViewModelTest {
@@ -31,9 +38,9 @@ class CalendarExportViewModelTest {
     private lateinit var calendarExportUtilsMock: CalendarExportUtils
     private lateinit var appFileProviderHandlerMock: AppFileProviderHandler
 
-    private val currentDayOfMonthFake = Random.nextInt()
-    private val currentMonthFake = Random.nextInt()
-    private val currentYearFake = Random.nextInt()
+    private val currentDayOfMonthFake = faker.random.nextInt()
+    private val currentMonthFake = faker.random.nextInt()
+    private val currentYearFake = faker.random.nextInt()
 
     @BeforeEach
     fun setUp() {
@@ -95,11 +102,74 @@ class CalendarExportViewModelTest {
     inner class OnDateRangeSelectedTests {
         @Test
         fun `Should update the selected dates based on start & end selected timestamps, current range selection and current selected dates`() =
-            runTest { }
+            runTest {
+                val randomMapSize = faker.random.nextInt(min = 1, max = 200)
+                val newSelectedDatesFake =
+                    mutableMapOf<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>()
+                        .apply {
+                            for (i in 0..randomMapSize) {
+                                val randomSelectedDatesSize =
+                                    faker.random.nextInt(min = 1, max = 31)
+
+                                val randomCalendarMonthYear = createCalendarMonthYearFake()
+                                val randomSelectedDatesList = List(randomSelectedDatesSize) {
+                                    createCalendarSelectedDate()
+                                }.toImmutableList()
+
+                                put(randomCalendarMonthYear, randomSelectedDatesList)
+                            }
+                        }
+                        .toImmutableMap()
+
+                val startDateTimeMillisFake = faker.random.nextLong()
+                val endDateTimeMillisFake = faker.random.nextLong()
+
+                every {
+                    calendarExportUtilsMock.getNewSelectedDates(
+                        startDateTimeMillis = startDateTimeMillisFake,
+                        endDateTimeMillis = endDateTimeMillisFake,
+                        currentRangeCount = sut.rangeSelectionCount.value,
+                        currentSelectedDates = sut.selectedDates.value,
+                    )
+                } returns newSelectedDatesFake
+
+                // assert default values
+                sut.rangeSelectionCount.value shouldBeEqualTo 1
+                sut.selectedDates.value shouldBeEqualTo persistentMapOf()
+
+                sut.onDateRangeSelected(
+                    startDateTimeMillis = startDateTimeMillisFake,
+                    endDateTimeMillis = endDateTimeMillisFake,
+                )
+
+                sut.selectedDates.value shouldBeEqualTo newSelectedDatesFake
+            }
 
         @Test
         fun `Should increment the range selection counter by one`() =
-            runTest { }
+            runTest {
+                val startDateTimeMillisFake = faker.random.nextLong()
+                val endDateTimeMillisFake = faker.random.nextLong()
+
+                // not core for this test
+                every {
+                    calendarExportUtilsMock.getNewSelectedDates(
+                        startDateTimeMillis = startDateTimeMillisFake,
+                        endDateTimeMillis = endDateTimeMillisFake,
+                        currentRangeCount = sut.rangeSelectionCount.value,
+                        currentSelectedDates = sut.selectedDates.value,
+                    )
+                } returns persistentMapOf()
+
+                val defaultRangeSelectionCount = sut.rangeSelectionCount.value
+
+                sut.onDateRangeSelected(
+                    startDateTimeMillis = startDateTimeMillisFake,
+                    endDateTimeMillis = endDateTimeMillisFake,
+                )
+
+                sut.rangeSelectionCount.value shouldBeEqualTo defaultRangeSelectionCount + 1
+            }
     }
 
     @Nested

@@ -16,7 +16,7 @@ class CalendarExportUtilsImpl(
     private val startDateCalendar: Calendar,
     private val endDateCalendar: Calendar,
 ) : CalendarExportUtils {
-    override fun getSelectedDates(
+    override fun getNewSelectedDates(
         startDateTimeMillis: Long,
         endDateTimeMillis: Long,
         currentRangeCount: Int,

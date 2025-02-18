@@ -92,6 +92,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kluent)
     testImplementation(libs.mockk)
+    testImplementation(libs.faker)
 
     // Other
     debugImplementation(libs.androidx.ui.tooling)
