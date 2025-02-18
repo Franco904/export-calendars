@@ -177,15 +177,27 @@ class CalendarExportViewModelTest {
     inner class OnClearDateRangeSelectionTests {
         @Test
         fun `Should restore the range selection counter count to one`() =
-            runTest { }
+            runTest {
+                sut.onClearDateRangeSelection()
+
+                sut.rangeSelectionCount.value shouldBeEqualTo 1
+            }
 
         @Test
         fun `Should clear the current selected dates map`() =
-            runTest { }
+            runTest {
+                sut.onClearDateRangeSelection()
+
+                sut.selectedDates.value shouldBeEqualTo persistentMapOf()
+            }
 
         @Test
-        fun `Should clear the current calendar label input text, when the current selected date range is cleared`() =
-            runTest { }
+        fun `Should clear the current calendar label input text`() =
+            runTest {
+                sut.onClearDateRangeSelection()
+
+                sut.calendarLabelInput.value shouldBeEqualTo null
+            }
     }
 
     @Nested
@@ -193,7 +205,13 @@ class CalendarExportViewModelTest {
     inner class OnCalendarLabelAssignTests {
         @Test
         fun `Should update the current calendar label input text`() =
-            runTest { }
+            runTest {
+                val randomLabel = faker.random.randomString(min = 1, max = 20)
+
+                sut.onCalendarLabelAssign(label = randomLabel)
+
+                sut.calendarLabelInput.value shouldBeEqualTo randomLabel
+            }
     }
 
     @Nested
