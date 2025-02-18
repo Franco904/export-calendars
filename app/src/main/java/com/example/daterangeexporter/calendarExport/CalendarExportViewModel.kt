@@ -124,35 +124,53 @@ class CalendarExportViewModel(
                     return@launch
                 }
 
-            val contentUris = arrayListOf<Uri>()
-
-            _calendarsBitmaps.value.forEach { (calendarMonthYear, calendarBitmap) ->
-                val currentTimestamp = calendar.timeInMillis
-                val monthYearString = "${calendarMonthYear.month}${calendarMonthYear.year}"
-
-                calendarsRepository.saveCalendarBitmap(
-                    bitmap = calendarBitmap!!,
-                    fileName = "calendar-$monthYearString-$currentTimestamp.png",
-                    parentFolder = appContext.cacheDir,
+            val contentUris = _calendarsBitmaps.value.map { (calendarMonthYear, calendarBitmap) ->
+                val uri = saveCalendarBitmap(
+                    calendarMonthYear = calendarMonthYear,
+                    calendarBitmap = calendarBitmap,
                 )
-                    .onError { error ->
-                        _calendarsBitmaps.update { persistentMapOf() }
+                uri
+            }
 
-                        _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
-                        return@launch
-                    }
-                    .onSuccess { file ->
-                        val contentUri = appFileProviderHandler.getUriForInternalAppFile(file)
-                        contentUris.add(contentUri)
-                    }
+            val contentUrisArrayList = arrayListOf<Uri>().apply {
+                val uris = contentUris.filterNotNull()
+                if (uris.size != contentUris.size) return@launch
+
+                addAll(uris)
             }
 
             _calendarsBitmaps.update { persistentMapOf() }
 
             _uiEvents.send(
-                UiEvents.SaveCalendarsBitmapsSuccess(calendarsContentUris = contentUris),
+                UiEvents.SaveCalendarsBitmapsSuccess(calendarsContentUris = contentUrisArrayList),
             )
         }
+    }
+
+    private suspend fun saveCalendarBitmap(
+        calendarMonthYear: CalendarMonthYear,
+        calendarBitmap: Bitmap?,
+    ): Uri? {
+        val currentTimestamp = calendar.timeInMillis
+        val monthYearString = "${calendarMonthYear.month}${calendarMonthYear.year}"
+
+        calendarsRepository.saveCalendarBitmap(
+            bitmap = calendarBitmap!!,
+            fileName = "calendar-$monthYearString-$currentTimestamp.png",
+            parentFolder = appContext.cacheDir,
+        )
+            .onError { error ->
+                _calendarsBitmaps.update { persistentMapOf() }
+
+                _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
+                return null
+            }
+            .onSuccess { file ->
+                val contentUri = appFileProviderHandler.getUriForInternalAppFile(file)
+                return contentUri
+            }
+
+        return null
     }
 
     fun onConvertedCalendarToBitmap(
