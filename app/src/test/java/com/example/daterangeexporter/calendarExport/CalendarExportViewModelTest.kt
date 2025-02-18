@@ -46,7 +46,7 @@ class CalendarExportViewModelTest {
     fun setUp() {
         mockkStatic(Calendar::class)
 
-        calendarMock = mockk(relaxed = true) {
+        calendarMock = mockk(relaxUnitFun = true) {
             every { get(Calendar.DAY_OF_MONTH) } returns currentDayOfMonthFake
             every { get(Calendar.MONTH) } returns currentMonthFake
             every { get(Calendar.YEAR) } returns currentYearFake
