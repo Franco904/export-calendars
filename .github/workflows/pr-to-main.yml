@@ -1,0 +1,27 @@
+name: PR to main
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  local-test:
+    name: Run Local Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          cache: gradle
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Gradle cache
+        uses: gradle/gradle-build-action@v3
+  
+      - name: Run local tests
+        run: ./gradlew testDebugUnitTest
