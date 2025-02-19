@@ -69,7 +69,7 @@ class CalendarExportViewModel(
             )
         }
 
-        _rangeSelectionCount.update { it }
+        _rangeSelectionCount.update { it + 1 }
     }
 
     fun onClearDateRangeSelection() {
@@ -162,7 +162,7 @@ class CalendarExportViewModel(
             .onError { error ->
                 _calendarsBitmaps.update { persistentMapOf() }
 
-                _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
+//                _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
                 return null
             }
             .onSuccess { file ->
