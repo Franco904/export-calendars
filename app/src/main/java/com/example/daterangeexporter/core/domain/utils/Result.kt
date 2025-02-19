@@ -8,17 +8,27 @@ sealed interface Result<out D, out E : RootError> {
 }
 
 inline fun <D, E : RootError> Result<D, E>.onError(
-    block: (E) -> Unit,
+    onError: (E) -> Unit,
 ) = apply {
     if (this is Result.Error<D, E>) {
-        block(error)
+        onError(error)
     }
 }
 
 inline fun <D, E : RootError> Result<D, E>.onSuccess(
-    block: (D) -> Unit,
+    onSuccess: (D) -> Unit,
 ) = apply {
     if (this is Result.Success<D, E>) {
-        block(data)
+        onSuccess(data)
+    }
+}
+
+inline fun <D, E : RootError, R> Result<D, E>.fold(
+    onError: (error: E) -> R,
+    onSuccess: (data: D) -> R,
+): R {
+    return when (this) {
+        is Result.Error<D, E> -> onError(error)
+        is Result.Success<D, E> -> onSuccess(data)
     }
 }
