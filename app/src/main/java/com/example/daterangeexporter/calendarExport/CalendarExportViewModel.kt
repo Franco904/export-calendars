@@ -100,12 +100,10 @@ class CalendarExportViewModel(
         val isThereAnyCalendarBitmapMissing = calendarsBitmaps.value.values.any { it == null }
 
         if (isThereAnyCalendarBitmapMissing) {
+            val firstMissingBitmapCalendar =
+                calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
             val firstMissingCalendarIndex =
-                selectedDates.value.keys.indexOfFirst { calendar ->
-                    val firstMissingBitmapCalendar =
-                        calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
-                    calendar == firstMissingBitmapCalendar
-                }
+                selectedDates.value.keys.indexOfFirst { calendar -> calendar == firstMissingBitmapCalendar }
 
             delay(150.milliseconds)
             _uiEvents.send(
