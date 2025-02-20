@@ -1,4 +1,4 @@
-package com.example.daterangeexporter.core.presentation.utils
+package com.example.daterangeexporter.core.presentation.utils.uiConverters
 
 import com.example.daterangeexporter.R
 import com.example.daterangeexporter.core.domain.utils.DataSourceError

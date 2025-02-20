@@ -6,6 +6,7 @@ import com.example.daterangeexporter.core.application.di.modules.dataSourceModul
 import com.example.daterangeexporter.core.application.di.modules.monitoringModule
 import com.example.daterangeexporter.core.application.di.modules.repositoryModule
 import com.example.daterangeexporter.core.application.di.modules.utilModule
+import com.example.daterangeexporter.core.application.di.modules.validatorModule
 import com.example.daterangeexporter.core.application.di.modules.viewModelModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -22,6 +23,7 @@ fun Application.configureDependencyInjection() {
             utilModule,
             dataSourceModule,
             repositoryModule,
+            validatorModule,
             viewModelModule,
         )
     }

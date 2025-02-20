@@ -22,6 +22,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +61,7 @@ fun CalendarExportScreen(
     val isDateSelectionEmpty =
         selectedDates.isEmpty() || rangeSelectionCount >= RangeSelectionLabel.Second.count
 
-    val calendarLabelInput by viewModel.calendarLabelInput.collectAsStateWithLifecycle()
+    val calendarFormUiState by viewModel.calendarFormUiState.collectAsStateWithLifecycle()
 
     val calendarsBitmaps by viewModel.calendarsBitmaps.collectAsStateWithLifecycle()
     val visibleItems by remember {
@@ -69,14 +70,18 @@ fun CalendarExportScreen(
         }
     }
 
-    var mustShowDateRangePickerDialog by remember { mutableStateOf(false) }
-    var mustShowLabelAssignDialog by remember { mutableStateOf(false) }
+    var mustShowDateRangePickerDialog by rememberSaveable { mutableStateOf(false) }
+    var mustShowLabelAssignDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { uiEvent ->
             when (uiEvent) {
                 is CalendarExportViewModel.UiEvents.DataSourceError -> {
                     showSnackbar(context.getString(uiEvent.messageId))
+                }
+
+                is CalendarExportViewModel.UiEvents.CalendarLabelAssigned -> {
+                    mustShowLabelAssignDialog = false
                 }
 
                 is CalendarExportViewModel.UiEvents.SaveCalendarsBitmapsSuccess -> {
@@ -124,7 +129,7 @@ fun CalendarExportScreen(
                 ) {
                     SecondaryActionsRow(
                         onAddNewDateRange = { mustShowDateRangePickerDialog = true },
-                        hasLabelAssigned = !calendarLabelInput.isNullOrBlank(),
+                        hasLabelAssigned = !calendarFormUiState.label.isNullOrBlank(),
                         onLabelAssign = { mustShowLabelAssignDialog = true },
                         onExportCalendars = viewModel::onStartCalendarsExport,
                     )
@@ -158,7 +163,7 @@ fun CalendarExportScreen(
                 BaseCalendar(
                     month = calendarMonthYear.month,
                     year = calendarMonthYear.year,
-                    clientNameLabel = calendarLabelInput,
+                    clientNameLabel = calendarFormUiState.label,
                     selectedDatesWithMonthYear = Pair(calendarMonthYear, monthSelectedDates),
                     isConvertingToBitmap = isConvertingToBitmap,
                     onConvertedToBitmap = { bitmap: Bitmap ->
@@ -206,14 +211,11 @@ fun CalendarExportScreen(
 
         if (mustShowLabelAssignDialog) {
             CalendarLabelAssignDialog(
-                input = calendarLabelInput,
-                onSave = { label ->
-                    viewModel.onCalendarLabelAssign(label = label ?: "")
-                    mustShowLabelAssignDialog = false
-                },
-                onCancel = {
-                    mustShowLabelAssignDialog = false
-                },
+                label = calendarFormUiState.label,
+                onLabelChanged = viewModel::onCalendarLabelChanged,
+                labelError = calendarFormUiState.labelError,
+                onSave = viewModel::onCalendarLabelAssign,
+                onCancel = { mustShowLabelAssignDialog = false },
             )
         }
     }

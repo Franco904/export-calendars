@@ -1,6 +1,8 @@
 package com.example.daterangeexporter.calendarExport.composables
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
@@ -18,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -34,16 +37,18 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun CalendarLabelAssignDialog(
-    input: String?,
+    label: String?,
+    onLabelChanged: () -> Unit,
+    labelError: Int?,
     onSave: (String?) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val fieldFocusRequester = remember { FocusRequester() }
 
-    var labelInput by remember(input) { mutableStateOf(input) }
+    var labelInput by rememberSaveable(label) { mutableStateOf(label) }
 
-    val titleResId = if (!input.isNullOrBlank()) {
+    val titleResId = if (!label.isNullOrBlank()) {
         R.string.calendar_label_assign_dialog_title_rename
     } else R.string.calendar_label_assign_dialog_title_assign
 
@@ -62,7 +67,11 @@ fun CalendarLabelAssignDialog(
         text = {
             OutlinedTextField(
                 value = labelInput ?: "",
-                onValueChange = { input -> labelInput = input },
+                onValueChange = { input ->
+                    labelInput = input
+                    onLabelChanged()
+                },
+                isError = labelError != null,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                 placeholder = {
                     Text(
@@ -77,27 +86,33 @@ fun CalendarLabelAssignDialog(
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 },
+                supportingText = {
+                    if (labelError != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(labelError),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                },
                 singleLine = true,
                 keyboardActions = KeyboardActions(
-                    onDone = {
-                        onSave(labelInput)
-                    }
+                    onDone = { onSave(label) }
                 ),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done,
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(horizontal = 8.dp)
+                    .padding(top = 8.dp, bottom = 4.dp)
                     .focusRequester(fieldFocusRequester)
             )
         },
         confirmButton = {
             TextButton(
-                onClick = {
-                    onSave(labelInput)
-                    labelInput = null
-                },
+                onClick = { onSave(labelInput) },
             ) {
                 Text(
                     text = stringResource(id = R.string.calendar_label_assign_dialog_primary_button),
@@ -106,10 +121,9 @@ fun CalendarLabelAssignDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = {
-                onCancel()
-                labelInput = null
-            }) {
+            TextButton(
+                onClick = { onCancel() },
+            ) {
                 Text(
                     text = stringResource(id = R.string.calendar_label_assign_dialog_secondary_button),
                     style = MaterialTheme.typography.titleMedium,
@@ -130,8 +144,10 @@ fun CalendarLabelAssignDialogPreview(
 ) {
     AppTheme {
         CalendarLabelAssignDialog(
-            input = "Franco Saravia Tavares",
-            onSave = { _ -> },
+            label = "Franco Saravia Tavares",
+            labelError = R.string.inline_calendar_label_is_blank,
+            onLabelChanged = {},
+            onSave = {},
             onCancel = {},
             modifier = modifier,
         )
