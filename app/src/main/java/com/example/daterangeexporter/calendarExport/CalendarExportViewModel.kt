@@ -81,7 +81,13 @@ class CalendarExportViewModel(
         _calendarFormUiState.update { CalendarFormUiState() }
     }
 
-    fun onCalendarLabelChanged() {
+    fun onCalendarLabelChange() {
+        _calendarFormUiState.update {
+            it.copy(labelError = null)
+        }
+    }
+
+    fun onCalendarLabelInputCancel() {
         _calendarFormUiState.update {
             it.copy(labelError = null)
         }

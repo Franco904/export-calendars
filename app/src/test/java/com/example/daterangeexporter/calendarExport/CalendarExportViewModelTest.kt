@@ -233,14 +233,31 @@ class CalendarExportViewModelTest {
     }
 
     @Nested
-    @DisplayName("onCalendarLabelChanged")
-    inner class OnCalendarLabelChangedTests {
+    @DisplayName("onCalendarLabelChange")
+    inner class OnCalendarLabelChangeTests {
         @Test
         fun `Should clear label field error, keeping the current label text unmodified`() =
             runTest {
                 val currentLabel = sut.calendarFormUiState.value.label
 
-                sut.onCalendarLabelChanged()
+                sut.onCalendarLabelChange()
+
+                with(sut.calendarFormUiState.value) {
+                    label shouldBeEqualTo currentLabel
+                    labelError shouldBeEqualTo null
+                }
+            }
+    }
+
+    @Nested
+    @DisplayName("onCalendarLabelInputCancel")
+    inner class OnCalendarLabelInputCancelTests {
+        @Test
+        fun `Should clear label field error, keeping the current label text unmodified`() =
+            runTest {
+                val currentLabel = sut.calendarFormUiState.value.label
+
+                sut.onCalendarLabelInputCancel()
 
                 with(sut.calendarFormUiState.value) {
                     label shouldBeEqualTo currentLabel

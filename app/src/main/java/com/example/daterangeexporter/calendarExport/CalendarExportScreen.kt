@@ -212,10 +212,13 @@ fun CalendarExportScreen(
         if (mustShowLabelAssignDialog) {
             CalendarLabelAssignDialog(
                 label = calendarFormUiState.label,
-                onLabelChanged = viewModel::onCalendarLabelChanged,
+                onLabelChanged = viewModel::onCalendarLabelChange,
                 labelError = calendarFormUiState.labelError,
                 onSave = viewModel::onCalendarLabelAssign,
-                onCancel = { mustShowLabelAssignDialog = false },
+                onCancel = {
+                    viewModel.onCalendarLabelInputCancel()
+                    mustShowLabelAssignDialog = false
+                },
             )
         }
     }
