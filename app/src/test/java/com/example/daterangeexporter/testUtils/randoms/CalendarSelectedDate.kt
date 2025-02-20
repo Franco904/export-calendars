@@ -1,10 +1,10 @@
-package com.example.daterangeexporter.testUtils.fakes
+package com.example.daterangeexporter.testUtils.randoms
 
 import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
 import com.example.daterangeexporter.testUtils.faker
 
-fun createCalendarSelectedDate() = CalendarSelectedDate(
+fun createCalendarSelectedDateRandom() = CalendarSelectedDate(
     dayOfMonth = faker.random.nextInt(min = 1, max = 31).toString(),
     isRangeStart = faker.random.nextBoolean(),
     isRangeEnd = faker.random.nextBoolean(),

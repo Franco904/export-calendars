@@ -1,15 +1,23 @@
 package com.example.daterangeexporter.calendarExport
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import app.cash.turbine.test
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.models.CalendarSelectedDate
 import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExportUtils
 import com.example.daterangeexporter.core.application.contentProviders.interfaces.AppFileProviderHandler
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
+import com.example.daterangeexporter.core.domain.utils.DataSourceError
+import com.example.daterangeexporter.core.domain.utils.Result
+import com.example.daterangeexporter.core.presentation.utils.toUiMessage
 import com.example.daterangeexporter.testUtils.MainDispatcherExtension
 import com.example.daterangeexporter.testUtils.faker
-import com.example.daterangeexporter.testUtils.fakes.createCalendarMonthYearFake
-import com.example.daterangeexporter.testUtils.fakes.createCalendarSelectedDate
+import com.example.daterangeexporter.testUtils.randoms.createCalendarMonthYearRandom
+import com.example.daterangeexporter.testUtils.randoms.createCalendarSelectedDateRandom
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -18,16 +26,21 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeEqualTo
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.io.File
 import java.util.Calendar
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @ExtendWith(MainDispatcherExtension::class)
 class CalendarExportViewModelTest {
     private lateinit var sut: CalendarExportViewModel
@@ -38,24 +51,18 @@ class CalendarExportViewModelTest {
     private lateinit var calendarExportUtilsMock: CalendarExportUtils
     private lateinit var appFileProviderHandlerMock: AppFileProviderHandler
 
-    private val currentDayOfMonthFake = faker.random.nextInt()
-    private val currentMonthFake = faker.random.nextInt()
-    private val currentYearFake = faker.random.nextInt()
+    private val currentDayOfMonthRandom = faker.random.nextInt()
+    private val currentMonthRandom = faker.random.nextInt()
+    private val currentYearRandom = faker.random.nextInt()
+
+    companion object {
+        private const val UI_MESSAGE_CONVERTER_FILE_NAME =
+            "com.example.daterangeexporter.core.presentation.utils.DataSourceErrorToUiMessageKt"
+    }
 
     @BeforeEach
     fun setUp() {
-        mockkStatic(Calendar::class)
-
-        calendarMock = mockk(relaxUnitFun = true) {
-            every { get(Calendar.DAY_OF_MONTH) } returns currentDayOfMonthFake
-            every { get(Calendar.MONTH) } returns currentMonthFake
-            every { get(Calendar.YEAR) } returns currentYearFake
-        }
-
-        appContextMock = mockk(relaxUnitFun = true)
-        calendarsRepositoryMock = mockk(relaxUnitFun = true)
-        calendarExportUtilsMock = mockk(relaxUnitFun = true)
-        appFileProviderHandlerMock = mockk(relaxUnitFun = true)
+        restartMocks()
 
         sut = CalendarExportViewModel(
             calendar = calendarMock,
@@ -64,6 +71,21 @@ class CalendarExportViewModelTest {
             calendarExportUtils = calendarExportUtilsMock,
             appFileProviderHandler = appFileProviderHandlerMock,
         )
+    }
+
+    private fun restartMocks() {
+        mockkStatic(Calendar::class)
+
+        calendarMock = mockk(relaxUnitFun = true) {
+            every { get(Calendar.DAY_OF_MONTH) } returns currentDayOfMonthRandom
+            every { get(Calendar.MONTH) } returns currentMonthRandom
+            every { get(Calendar.YEAR) } returns currentYearRandom
+        }
+
+        appContextMock = mockk(relaxUnitFun = true)
+        calendarsRepositoryMock = mockk(relaxUnitFun = true)
+        calendarExportUtilsMock = mockk(relaxUnitFun = true)
+        appFileProviderHandlerMock = mockk(relaxUnitFun = true)
     }
 
     @AfterEach
@@ -77,7 +99,7 @@ class CalendarExportViewModelTest {
         @Test
         fun `Should hold correct day of month based on the Calendar API`() =
             runTest {
-                sut.currentDayOfMonth shouldBeEqualTo currentDayOfMonthFake
+                sut.currentDayOfMonth shouldBeEqualTo currentDayOfMonthRandom
             }
     }
 
@@ -87,12 +109,12 @@ class CalendarExportViewModelTest {
         @Test
         fun `Should hold correct initial calendar based on the values of current month and year`() =
             runTest {
-                val adjustedMonthFake = currentMonthFake + 1
+                val adjustedMonthRandom = currentMonthRandom + 1
 
                 sut.initialCalendar shouldBeEqualTo CalendarMonthYear(
-                    id = adjustedMonthFake + currentYearFake,
-                    month = adjustedMonthFake,
-                    year = currentYearFake,
+                    id = adjustedMonthRandom + currentYearRandom,
+                    month = adjustedMonthRandom,
+                    year = currentYearRandom,
                 )
             }
     }
@@ -103,17 +125,20 @@ class CalendarExportViewModelTest {
         @Test
         fun `Should update the selected dates based on start & end selected timestamps, current range selection and current selected dates`() =
             runTest {
-                val randomMapSize = faker.random.nextInt(min = 1, max = 200)
-                val newSelectedDatesFake =
+                val startDateTimeMillisRandom = faker.random.nextLong()
+                val endDateTimeMillisRandom = faker.random.nextLong()
+
+                val mapSizeRandom = faker.random.nextInt(min = 1, max = 200)
+                val newSelectedDatesRandom =
                     mutableMapOf<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>()
                         .apply {
-                            for (i in 0..randomMapSize) {
+                            for (i in 0..mapSizeRandom) {
                                 val randomSelectedDatesSize =
                                     faker.random.nextInt(min = 1, max = 31)
 
-                                val randomCalendarMonthYear = createCalendarMonthYearFake()
+                                val randomCalendarMonthYear = createCalendarMonthYearRandom()
                                 val randomSelectedDatesList = List(randomSelectedDatesSize) {
-                                    createCalendarSelectedDate()
+                                    createCalendarSelectedDateRandom()
                                 }.toImmutableList()
 
                                 put(randomCalendarMonthYear, randomSelectedDatesList)
@@ -121,51 +146,49 @@ class CalendarExportViewModelTest {
                         }
                         .toImmutableMap()
 
-                val startDateTimeMillisFake = faker.random.nextLong()
-                val endDateTimeMillisFake = faker.random.nextLong()
-
                 every {
                     calendarExportUtilsMock.getNewSelectedDates(
-                        startDateTimeMillis = startDateTimeMillisFake,
-                        endDateTimeMillis = endDateTimeMillisFake,
+                        startDateTimeMillis = startDateTimeMillisRandom,
+                        endDateTimeMillis = endDateTimeMillisRandom,
                         currentRangeCount = sut.rangeSelectionCount.value,
                         currentSelectedDates = sut.selectedDates.value,
                     )
-                } returns newSelectedDatesFake
+                } returns newSelectedDatesRandom
 
-                // assert default values
-                sut.rangeSelectionCount.value shouldBeEqualTo 1
+                // assert default value
                 sut.selectedDates.value shouldBeEqualTo persistentMapOf()
 
                 sut.onDateRangeSelected(
-                    startDateTimeMillis = startDateTimeMillisFake,
-                    endDateTimeMillis = endDateTimeMillisFake,
+                    startDateTimeMillis = startDateTimeMillisRandom,
+                    endDateTimeMillis = endDateTimeMillisRandom,
                 )
 
-                sut.selectedDates.value shouldBeEqualTo newSelectedDatesFake
+                sut.selectedDates.value shouldBeEqualTo newSelectedDatesRandom
             }
 
         @Test
         fun `Should increment the range selection counter by one`() =
             runTest {
-                val startDateTimeMillisFake = faker.random.nextLong()
-                val endDateTimeMillisFake = faker.random.nextLong()
+                val startDateTimeMillisRandom = faker.random.nextLong()
+                val endDateTimeMillisRandom = faker.random.nextLong()
 
                 // not core for this test
                 every {
                     calendarExportUtilsMock.getNewSelectedDates(
-                        startDateTimeMillis = startDateTimeMillisFake,
-                        endDateTimeMillis = endDateTimeMillisFake,
+                        startDateTimeMillis = startDateTimeMillisRandom,
+                        endDateTimeMillis = endDateTimeMillisRandom,
                         currentRangeCount = sut.rangeSelectionCount.value,
                         currentSelectedDates = sut.selectedDates.value,
                     )
                 } returns persistentMapOf()
 
+                // assert default value
                 val defaultRangeSelectionCount = sut.rangeSelectionCount.value
+                defaultRangeSelectionCount shouldBeEqualTo 1
 
                 sut.onDateRangeSelected(
-                    startDateTimeMillis = startDateTimeMillisFake,
-                    endDateTimeMillis = endDateTimeMillisFake,
+                    startDateTimeMillis = startDateTimeMillisRandom,
+                    endDateTimeMillis = endDateTimeMillisRandom,
                 )
 
                 sut.rangeSelectionCount.value shouldBeEqualTo defaultRangeSelectionCount + 1
@@ -214,39 +237,349 @@ class CalendarExportViewModelTest {
             }
     }
 
+    // Tests depend on onDateRangeSelected and onConvertedCalendarToBitmap
     @Nested
     @DisplayName("onStartCalendarsExport")
     inner class OnStartCalendarsExportTests {
-        @Test
-        fun `Should fill the calendars bitmaps map with default null values to trigger calendars export start`() =
-            runTest { }
+        private val newSelectedDatesRandom = mutableMapOf(
+            createCalendarMonthYearRandom() to List(2) { createCalendarSelectedDateRandom() }.toImmutableList(),
+            createCalendarMonthYearRandom() to List(2) { createCalendarSelectedDateRandom() }.toImmutableList(),
+        ).toImmutableMap()
+
+        @BeforeEach
+        fun setUp() {
+            configureDefaultStubs()
+
+            val startDateTimeMillisRandom = faker.random.nextLong()
+            val endDateTimeMillisRandom = faker.random.nextLong()
+
+            every {
+                calendarExportUtilsMock.getNewSelectedDates(
+                    startDateTimeMillis = startDateTimeMillisRandom,
+                    endDateTimeMillis = endDateTimeMillisRandom,
+                    currentRangeCount = sut.rangeSelectionCount.value,
+                    currentSelectedDates = sut.selectedDates.value,
+                )
+            } returns newSelectedDatesRandom
+
+            sut.onDateRangeSelected(
+                startDateTimeMillis = startDateTimeMillisRandom,
+                endDateTimeMillis = endDateTimeMillisRandom,
+            )
+        }
+
+        private fun configureDefaultStubs() {
+            mockkStatic(UI_MESSAGE_CONVERTER_FILE_NAME)
+
+            coEvery { calendarsRepositoryMock.clearCacheDir() } returns Result.Success(data = Unit)
+
+            every { calendarMock.timeInMillis } returns System.currentTimeMillis()
+
+            every { appContextMock.cacheDir } returns mockk<File>()
+
+            coEvery {
+                calendarsRepositoryMock.saveCalendarBitmap(any(), any(), any())
+            } returns Result.Success(data = mockk<File>())
+
+            every {
+                appFileProviderHandlerMock.getUriForInternalAppFile(file = any())
+            } returns mockk<Uri>()
+
+            every {
+                DataSourceError.InternalStorageError.UnknownError.toUiMessage()
+            } returns 0
+        }
+
+        @AfterEach
+        fun tearDown() {
+            unmockkStatic(UI_MESSAGE_CONVERTER_FILE_NAME)
+        }
 
         @Test
-        fun `Should emit a 'missing calendar bitmap' UI event to the first calendar in sequence, when there is at least one bitmap already collected and yet there are missing bitmaps`() =
-            runTest { }
+        fun `Should fill the calendars bitmaps map with default null values and same size as the selected dates map to trigger calendars export start`() =
+            runTest {
+                sut.onStartCalendarsExport()
+                advanceUntilIdle()
+
+                val expectedCalendarsBitmaps = mutableMapOf(
+                    newSelectedDatesRandom.keys.toList()[0] to null,
+                    newSelectedDatesRandom.keys.toList()[1] to null,
+                ).toImmutableMap()
+
+                sut.calendarsBitmaps.value shouldBeEqualTo expectedCalendarsBitmaps
+            }
+
+        @Test
+        fun `Should emit a 'missing calendar bitmap' UI event to the first calendar in sequence, when there is at least one missing bitmap to collect`() =
+            runTest {
+                // Pre condition
+                sut.calendarsBitmaps.value.size shouldNotBeEqualTo newSelectedDatesRandom.size
+
+                sut.uiEvents.test {
+                    sut.onStartCalendarsExport()
+                    advanceUntilIdle()
+
+                    val firstEvent = awaitItem()
+                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.MissingCalendarBitmap(
+                        firstMissingBitmapIndex = 0,
+                    )
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
 
         @Test
         fun `Should clear out the app's cache folder when all bitmaps are collected to export`() =
-            runTest { }
+            runTest {
+                val bitmapMock1 = mockk<Bitmap>(relaxUnitFun = true)
+                val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
+
+                sut.onStartCalendarsExport()
+
+                sut.onConvertedCalendarToBitmap(
+                    calendarMonthYear = newSelectedDatesRandom.keys.toList()[0],
+                    bitmap = bitmapMock1,
+                )
+
+                sut.onConvertedCalendarToBitmap(
+                    calendarMonthYear = newSelectedDatesRandom.keys.toList()[1],
+                    bitmap = bitmapMock2,
+                )
+
+                advanceUntilIdle()
+
+                coVerify(exactly = 1) { calendarsRepositoryMock.clearCacheDir() }
+            }
 
         @Test
         fun `Should emit a 'data source error' UI event and stop calendars export, when an error result comes out when clearing out the app's cache folder`() =
-            runTest { }
+            runTest {
+                coEvery {
+                    calendarsRepositoryMock.clearCacheDir()
+                } returns Result.Error(error = DataSourceError.InternalStorageError.UnknownError)
+
+                val errorMessageId = faker.random.nextInt()
+                every {
+                    DataSourceError.InternalStorageError.UnknownError.toUiMessage()
+                } returns errorMessageId
+
+                val bitmapMock1 = mockk<Bitmap>(relaxUnitFun = true)
+                val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
+
+                sut.uiEvents.test {
+                    sut.onStartCalendarsExport()
+
+                    sut.onConvertedCalendarToBitmap(
+                        calendarMonthYear = newSelectedDatesRandom.keys.toList()[0],
+                        bitmap = bitmapMock1,
+                    )
+
+                    sut.onConvertedCalendarToBitmap(
+                        calendarMonthYear = newSelectedDatesRandom.keys.toList()[1],
+                        bitmap = bitmapMock2,
+                    )
+
+                    advanceUntilIdle()
+
+                    val firstEvent = awaitItem()
+                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
+                        messageId = errorMessageId,
+                    )
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
 
         @Test
-        fun `Should save each bitmap in the app's cache folder and then emit a 'saving bitmaps success' UI event containing their content URIs for external access`() =
-            runTest { }
+        fun `Should emit a 'save bitmaps success' UI event containing their content URIs for external access and then clear calendars bitmaps map, when all bitmaps are saved successfully`() =
+            runTest {
+                val currentTimestamp = System.currentTimeMillis()
+                every { calendarMock.timeInMillis } returns currentTimestamp
+
+                val cacheFolderMock = mockk<File>(relaxUnitFun = true)
+                every { appContextMock.cacheDir } returns cacheFolderMock
+
+                val bitmapMock1 = mockk<Bitmap>(relaxUnitFun = true)
+                val calendarMonthYear1 = newSelectedDatesRandom.keys.toList()[0]
+                val bitmapResultFileMock1 = mockk<File>(relaxUnitFun = true)
+
+                coEvery {
+                    val monthYearString = "${calendarMonthYear1.month}${calendarMonthYear1.year}"
+
+                    calendarsRepositoryMock.saveCalendarBitmap(
+                        bitmap = bitmapMock1,
+                        fileName = "calendar-$monthYearString-$currentTimestamp.png",
+                        parentFolder = cacheFolderMock,
+                    )
+                } returns Result.Success(data = bitmapResultFileMock1)
+
+                val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
+                val calendarMonthYear2 = newSelectedDatesRandom.keys.toList()[1]
+                val bitmapResultFileMock2 = mockk<File>(relaxUnitFun = true)
+
+                coEvery {
+                    val monthYearString = "${calendarMonthYear2.month}${calendarMonthYear2.year}"
+
+                    calendarsRepositoryMock.saveCalendarBitmap(
+                        bitmap = bitmapMock2,
+                        fileName = "calendar-$monthYearString-$currentTimestamp.png",
+                        parentFolder = cacheFolderMock,
+                    )
+                } returns Result.Success(data = bitmapResultFileMock2)
+
+                val contentUriBitmapFileMock1 = mockk<Uri>(relaxUnitFun = true)
+                every {
+                    appFileProviderHandlerMock.getUriForInternalAppFile(bitmapResultFileMock1)
+                } returns contentUriBitmapFileMock1
+
+                val contentUriBitmapFileMock2 = mockk<Uri>(relaxUnitFun = true)
+                every {
+                    appFileProviderHandlerMock.getUriForInternalAppFile(bitmapResultFileMock2)
+                } returns contentUriBitmapFileMock2
+
+                sut.uiEvents.test {
+                    sut.onStartCalendarsExport()
+
+                    sut.onConvertedCalendarToBitmap(
+                        calendarMonthYear = newSelectedDatesRandom.keys.toList()[0],
+                        bitmap = bitmapMock1,
+                    )
+
+                    sut.onConvertedCalendarToBitmap(
+                        calendarMonthYear = newSelectedDatesRandom.keys.toList()[1],
+                        bitmap = bitmapMock2,
+                    )
+
+                    advanceUntilIdle()
+
+                    val firstEvent = awaitItem()
+                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.SaveCalendarsBitmapsSuccess(
+                        calendarsContentUris = arrayListOf(
+                            contentUriBitmapFileMock1,
+                            contentUriBitmapFileMock2,
+                        ),
+                    )
+
+                    sut.calendarsBitmaps.value.size shouldBeEqualTo 0
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
 
         @Test
-        fun `Should reset calendars bitmaps map, when all bitmaps are saved successfully`() =
-            runTest { }
+        fun `Should emit a 'data source error' UI event, reset calendars bitmaps map and then stop calendars export, when an error result comes out when saving a bitmap`() =
+            runTest {
+                val currentTimestamp = System.currentTimeMillis()
+                every { calendarMock.timeInMillis } returns currentTimestamp
+
+                val cacheFolderMock = mockk<File>(relaxUnitFun = true)
+                every { appContextMock.cacheDir } returns cacheFolderMock
+
+                val bitmapMock1 = mockk<Bitmap>(relaxUnitFun = true)
+                val calendarMonthYear1 = newSelectedDatesRandom.keys.toList()[0]
+                val bitmapResultFileMock1 = mockk<File>(relaxUnitFun = true)
+
+                coEvery {
+                    val monthYearString = "${calendarMonthYear1.month}${calendarMonthYear1.year}"
+
+                    calendarsRepositoryMock.saveCalendarBitmap(
+                        bitmap = bitmapMock1,
+                        fileName = "calendar-$monthYearString-$currentTimestamp.png",
+                        parentFolder = cacheFolderMock,
+                    )
+                } returns Result.Success(data = bitmapResultFileMock1)
+
+                val calendarMonthYear2 = newSelectedDatesRandom.keys.toList()[1]
+                val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
+
+                coEvery {
+                    val monthYearString = "${calendarMonthYear2.month}${calendarMonthYear2.year}"
+
+                    calendarsRepositoryMock.saveCalendarBitmap(
+                        bitmap = bitmapMock2,
+                        fileName = "calendar-$monthYearString-$currentTimestamp.png",
+                        parentFolder = cacheFolderMock,
+                    )
+                } returns Result.Error(error = DataSourceError.InternalStorageError.UnknownError)
+
+                val errorMessageId = faker.random.nextInt()
+                every {
+                    DataSourceError.InternalStorageError.UnknownError.toUiMessage()
+                } returns errorMessageId
+
+                sut.uiEvents.test {
+                    sut.onStartCalendarsExport()
+
+                    sut.onConvertedCalendarToBitmap(
+                        calendarMonthYear = newSelectedDatesRandom.keys.toList()[0],
+                        bitmap = bitmapMock1,
+                    )
+
+                    sut.onConvertedCalendarToBitmap(
+                        calendarMonthYear = newSelectedDatesRandom.keys.toList()[1],
+                        bitmap = bitmapMock2,
+                    )
+
+                    advanceUntilIdle()
+
+                    val firstEvent = awaitItem()
+                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
+                        messageId = errorMessageId,
+                    )
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+
+                    sut.calendarsBitmaps.value.size shouldBeEqualTo 0
+                }
+            }
     }
 
+    // Tests depend on onDateRangeSelected
     @Nested
     @DisplayName("onConvertedCalendarToBitmap")
     inner class OnConvertedCalendarToBitmapTests {
+        private val newSelectedDatesRandom = mutableMapOf(
+            createCalendarMonthYearRandom() to List(2) { createCalendarSelectedDateRandom() }.toImmutableList(),
+            createCalendarMonthYearRandom() to List(2) { createCalendarSelectedDateRandom() }.toImmutableList(),
+        ).toImmutableMap()
+
+        @BeforeEach
+        fun setUp() {
+            val startDateTimeMillisRandom = faker.random.nextLong()
+            val endDateTimeMillisRandom = faker.random.nextLong()
+
+            every {
+                calendarExportUtilsMock.getNewSelectedDates(
+                    startDateTimeMillis = startDateTimeMillisRandom,
+                    endDateTimeMillis = endDateTimeMillisRandom,
+                    currentRangeCount = sut.rangeSelectionCount.value,
+                    currentSelectedDates = sut.selectedDates.value,
+                )
+            } returns newSelectedDatesRandom
+
+            sut.onDateRangeSelected(
+                startDateTimeMillis = startDateTimeMillisRandom,
+                endDateTimeMillis = endDateTimeMillisRandom,
+            )
+        }
+
         @Test
         fun `Should update the calendars bitmaps map entry associated with a calendar with it's collected bitmap`() =
-            runTest { }
+            runTest {
+                val calendarMonthYearRandom = newSelectedDatesRandom.keys.random()
+                val bitmapMock: Bitmap = mockk(relaxUnitFun = true)
+
+                sut.onConvertedCalendarToBitmap(
+                    calendarMonthYear = calendarMonthYearRandom,
+                    bitmap = bitmapMock,
+                )
+
+                sut.calendarsBitmaps.value[calendarMonthYearRandom]
+                    .shouldBeEqualTo(bitmapMock)
+            }
     }
 }

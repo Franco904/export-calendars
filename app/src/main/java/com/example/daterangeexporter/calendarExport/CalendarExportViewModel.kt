@@ -12,8 +12,8 @@ import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExp
 import com.example.daterangeexporter.calendarExport.utils.interfaces.ImmutableSelectedDates
 import com.example.daterangeexporter.core.application.contentProviders.interfaces.AppFileProviderHandler
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
+import com.example.daterangeexporter.core.domain.utils.fold
 import com.example.daterangeexporter.core.domain.utils.onError
-import com.example.daterangeexporter.core.domain.utils.onSuccess
 import com.example.daterangeexporter.core.presentation.utils.toUiMessage
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
@@ -22,8 +22,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -91,7 +91,7 @@ class CalendarExportViewModel(
 
         viewModelScope.launch {
             _calendarsBitmaps
-                .filter { it.isNotEmpty() && it.values.any { bitmap -> bitmap != null } }
+                .takeWhile { it.isNotEmpty() }
                 .collect { checkMissingCalendarsBitmaps() }
         }
     }
@@ -100,12 +100,10 @@ class CalendarExportViewModel(
         val isThereAnyCalendarBitmapMissing = calendarsBitmaps.value.values.any { it == null }
 
         if (isThereAnyCalendarBitmapMissing) {
+            val firstMissingBitmapCalendar =
+                calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
             val firstMissingCalendarIndex =
-                selectedDates.value.keys.indexOfFirst { calendar ->
-                    val firstMissingBitmapCalendar =
-                        calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
-                    calendar == firstMissingBitmapCalendar
-                }
+                selectedDates.value.keys.indexOfFirst { calendar -> calendar == firstMissingBitmapCalendar }
 
             delay(150.milliseconds)
             _uiEvents.send(
@@ -129,21 +127,17 @@ class CalendarExportViewModel(
                     calendarMonthYear = calendarMonthYear,
                     calendarBitmap = calendarBitmap,
                 )
-                uri
+
+                uri ?: return@launch
             }
-
-            val contentUrisArrayList = arrayListOf<Uri>().apply {
-                val uris = contentUris.filterNotNull()
-                if (uris.size != contentUris.size) return@launch
-
-                addAll(uris)
-            }
-
-            _calendarsBitmaps.update { persistentMapOf() }
 
             _uiEvents.send(
-                UiEvents.SaveCalendarsBitmapsSuccess(calendarsContentUris = contentUrisArrayList),
+                UiEvents.SaveCalendarsBitmapsSuccess(
+                    calendarsContentUris = arrayListOf<Uri>().apply { addAll(contentUris) },
+                ),
             )
+
+            _calendarsBitmaps.update { persistentMapOf() }
         }
     }
 
@@ -159,18 +153,18 @@ class CalendarExportViewModel(
             fileName = "calendar-$monthYearString-$currentTimestamp.png",
             parentFolder = appContext.cacheDir,
         )
-            .onError { error ->
-                _calendarsBitmaps.update { persistentMapOf() }
+            .fold(
+                onError = { error ->
+                    _calendarsBitmaps.update { persistentMapOf() }
 
-                _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
-                return null
-            }
-            .onSuccess { file ->
-                val contentUri = appFileProviderHandler.getUriForInternalAppFile(file)
-                return contentUri
-            }
-
-        return null
+                    _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
+                    return null
+                },
+                onSuccess = { file ->
+                    val contentUri = appFileProviderHandler.getUriForInternalAppFile(file)
+                    return contentUri
+                }
+            )
     }
 
     fun onConvertedCalendarToBitmap(

@@ -1,9 +1,9 @@
-package com.example.daterangeexporter.testUtils.fakes
+package com.example.daterangeexporter.testUtils.randoms
 
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
 import com.example.daterangeexporter.testUtils.faker
 
-fun createCalendarMonthYearFake() = CalendarMonthYear(
+fun createCalendarMonthYearRandom() = CalendarMonthYear(
     id = faker.random.nextInt(),
     month = faker.random.nextInt(),
     year = faker.random.nextInt(),
