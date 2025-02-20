@@ -1,8 +1,8 @@
 <resources>
-    <!--  App  -->
+    <!-- App -->
     <string name="app_name">Exportar calendários</string>
 
-    <!--  Base calendar  -->
+    <!-- Base calendar -->
     <string name="january_label">JANEIRO</string>
     <string name="february_label">FEVEREIRO</string>
     <string name="march_label">MARÇO</string>
@@ -24,7 +24,7 @@
     <string name="friday_label">S</string>
     <string name="saturday_label">S</string>
 
-    <!--  Calendar export  -->
+    <!-- Calendar export -->
     <string name="export_calendar_title">Seleção de períodos de datas</string>
 
     <string name="export_calendar_empty_screen_title">Nenhum período selecionado</string>
@@ -48,7 +48,11 @@
     <string name="calendar_label_assign_dialog_primary_button">Salvar</string>
     <string name="calendar_label_assign_dialog_secondary_button">Cancelar</string>
 
-    <!--  Error  -->
+    <!-- Inline errors -->
+    <string name="inline_calendar_label_is_blank">Obrigatório</string>
+    <string name="inline_calendar_label_too_big">Marcador pode ter no máximo 25 caracteres</string>
+
+    <!-- Snackbar errors -->
     <string name="snackbar_internal_storage_serialization_error">Não foi possível salvar o arquivo. Tente novamente mais tarde.</string>
     <string name="snackbar_internal_storage_bitmap_compress_error">Não foi possível processar a imagem. Tente novamente mais tarde.</string>
     <string name="snackbar_internal_storage_unknown_error">Erro desconhecido. Tente novamente mais tarde.</string>

@@ -11,6 +11,7 @@ val viewModelModule = module {
             calendar = Calendar.getInstance(),
             appContext = get(),
             calendarsRepository = get(),
+            calendarsValidator = get(),
             calendarExportUtils = get(),
             appFileProviderHandler = get(),
         )

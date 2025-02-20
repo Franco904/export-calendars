@@ -11,8 +11,12 @@ import com.example.daterangeexporter.core.application.contentProviders.interface
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
 import com.example.daterangeexporter.core.domain.utils.DataSourceError
 import com.example.daterangeexporter.core.domain.utils.Result
-import com.example.daterangeexporter.core.presentation.utils.toUiMessage
+import com.example.daterangeexporter.core.domain.utils.ValidationError
+import com.example.daterangeexporter.core.domain.validators.interfaces.CalendarsValidator
+import com.example.daterangeexporter.core.presentation.utils.uiConverters.toUiMessage
 import com.example.daterangeexporter.testUtils.MainDispatcherExtension
+import com.example.daterangeexporter.testUtils.constants.DATA_SOURCE_ERROR_CONVERTER_FILE_NAME
+import com.example.daterangeexporter.testUtils.constants.VALIDATION_ERROR_CONVERTER_FILE_NAME
 import com.example.daterangeexporter.testUtils.faker
 import com.example.daterangeexporter.testUtils.randoms.createCalendarMonthYearRandom
 import com.example.daterangeexporter.testUtils.randoms.createCalendarSelectedDateRandom
@@ -39,6 +43,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import java.util.Calendar
+import kotlin.properties.Delegates.notNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @ExtendWith(MainDispatcherExtension::class)
@@ -48,17 +53,13 @@ class CalendarExportViewModelTest {
     private lateinit var calendarMock: Calendar
     private lateinit var appContextMock: Context
     private lateinit var calendarsRepositoryMock: CalendarsRepository
+    private lateinit var calendarsValidatorMock: CalendarsValidator
     private lateinit var calendarExportUtilsMock: CalendarExportUtils
     private lateinit var appFileProviderHandlerMock: AppFileProviderHandler
 
     private val currentDayOfMonthRandom = faker.random.nextInt()
     private val currentMonthRandom = faker.random.nextInt()
     private val currentYearRandom = faker.random.nextInt()
-
-    companion object {
-        private const val UI_MESSAGE_CONVERTER_FILE_NAME =
-            "com.example.daterangeexporter.core.presentation.utils.DataSourceErrorToUiMessageKt"
-    }
 
     @BeforeEach
     fun setUp() {
@@ -68,6 +69,7 @@ class CalendarExportViewModelTest {
             calendar = calendarMock,
             appContext = appContextMock,
             calendarsRepository = calendarsRepositoryMock,
+            calendarsValidator = calendarsValidatorMock,
             calendarExportUtils = calendarExportUtilsMock,
             appFileProviderHandler = appFileProviderHandlerMock,
         )
@@ -84,6 +86,7 @@ class CalendarExportViewModelTest {
 
         appContextMock = mockk(relaxUnitFun = true)
         calendarsRepositoryMock = mockk(relaxUnitFun = true)
+        calendarsValidatorMock = mockk(relaxUnitFun = true)
         calendarExportUtilsMock = mockk(relaxUnitFun = true)
         appFileProviderHandlerMock = mockk(relaxUnitFun = true)
     }
@@ -122,12 +125,18 @@ class CalendarExportViewModelTest {
     @Nested
     @DisplayName("onDateRangeSelected")
     inner class OnDateRangeSelectedTests {
+        private var startDateTimeMillisRandom by notNull<Long>()
+        private var endDateTimeMillisRandom by notNull<Long>()
+
+        @BeforeEach
+        fun setUp() {
+            startDateTimeMillisRandom = faker.random.nextLong()
+            endDateTimeMillisRandom = faker.random.nextLong()
+        }
+
         @Test
         fun `Should update the selected dates based on start & end selected timestamps, current range selection and current selected dates`() =
             runTest {
-                val startDateTimeMillisRandom = faker.random.nextLong()
-                val endDateTimeMillisRandom = faker.random.nextLong()
-
                 val mapSizeRandom = faker.random.nextInt(min = 1, max = 200)
                 val newSelectedDatesRandom =
                     mutableMapOf<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>()
@@ -169,9 +178,6 @@ class CalendarExportViewModelTest {
         @Test
         fun `Should increment the range selection counter by one`() =
             runTest {
-                val startDateTimeMillisRandom = faker.random.nextLong()
-                val endDateTimeMillisRandom = faker.random.nextLong()
-
                 // not core for this test
                 every {
                     calendarExportUtilsMock.getNewSelectedDates(
@@ -219,21 +225,119 @@ class CalendarExportViewModelTest {
             runTest {
                 sut.onClearDateRangeSelection()
 
-                sut.calendarLabelInput.value shouldBeEqualTo null
+                with(sut.calendarFormUiState.value) {
+                    label shouldBeEqualTo null
+                    labelError shouldBeEqualTo null
+                }
+            }
+    }
+
+    @Nested
+    @DisplayName("onCalendarLabelChange")
+    inner class OnCalendarLabelChangeTests {
+        @Test
+        fun `Should clear label field error, keeping the current label text unmodified`() =
+            runTest {
+                val currentLabel = sut.calendarFormUiState.value.label
+
+                sut.onCalendarLabelChange()
+
+                with(sut.calendarFormUiState.value) {
+                    label shouldBeEqualTo currentLabel
+                    labelError shouldBeEqualTo null
+                }
+            }
+    }
+
+    @Nested
+    @DisplayName("onCalendarLabelInputCancel")
+    inner class OnCalendarLabelInputCancelTests {
+        @Test
+        fun `Should clear label field error, keeping the current label text unmodified`() =
+            runTest {
+                val currentLabel = sut.calendarFormUiState.value.label
+
+                sut.onCalendarLabelInputCancel()
+
+                with(sut.calendarFormUiState.value) {
+                    label shouldBeEqualTo currentLabel
+                    labelError shouldBeEqualTo null
+                }
             }
     }
 
     @Nested
     @DisplayName("onCalendarLabelAssign")
     inner class OnCalendarLabelAssignTests {
+        private lateinit var randomLabel: String
+
+        @BeforeEach
+        fun setUp() {
+            mockkStatic(VALIDATION_ERROR_CONVERTER_FILE_NAME)
+
+            randomLabel = faker.random.randomString(min = 1, max = 20)
+        }
+
+        @AfterEach
+        fun tearDown() {
+            unmockkStatic(VALIDATION_ERROR_CONVERTER_FILE_NAME)
+        }
+
         @Test
-        fun `Should update the current calendar label input text`() =
+        fun `Should interrupt calendar label assign, when the validation results any error`() =
             runTest {
-                val randomLabel = faker.random.randomString(min = 1, max = 20)
+                every {
+                    calendarsValidatorMock.validateLabel(randomLabel)
+                } returns Result.Error(error = ValidationError.CalendarLabel.entries.random())
+
+                val errorMessageId = faker.random.nextInt()
+                for (error in ValidationError.CalendarLabel.entries) {
+                    every { error.toUiMessage() } returns errorMessageId
+                }
+
+                sut.uiEvents.test {
+                    sut.onCalendarLabelAssign(label = randomLabel)
+
+                    with(sut.calendarFormUiState.value) {
+                        label shouldNotBeEqualTo randomLabel
+                        labelError shouldBeEqualTo errorMessageId
+                    }
+
+                    expectNoEvents()
+                }
+            }
+
+        @Test
+        fun `Should update the current calendar label input text, when the validation results in success`() =
+            runTest {
+                every {
+                    calendarsValidatorMock.validateLabel(randomLabel)
+                } returns Result.Success(data = Unit)
 
                 sut.onCalendarLabelAssign(label = randomLabel)
 
-                sut.calendarLabelInput.value shouldBeEqualTo randomLabel
+                with(sut.calendarFormUiState.value) {
+                    label shouldBeEqualTo randomLabel
+                    labelError shouldBeEqualTo null
+                }
+            }
+
+        @Test
+        fun `Should send 'calendar label assigned' UI event, notifying the UI about the new label assign, when the validation results in success`() =
+            runTest {
+                every {
+                    calendarsValidatorMock.validateLabel(randomLabel)
+                } returns Result.Success(data = Unit)
+
+                sut.uiEvents.test {
+                    sut.onCalendarLabelAssign(label = randomLabel)
+
+                    val event = awaitItem()
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.CalendarLabelAssigned
+
+                    expectNoEvents()
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
     }
 
@@ -269,7 +373,7 @@ class CalendarExportViewModelTest {
         }
 
         private fun configureDefaultStubs() {
-            mockkStatic(UI_MESSAGE_CONVERTER_FILE_NAME)
+            mockkStatic(DATA_SOURCE_ERROR_CONVERTER_FILE_NAME)
 
             coEvery { calendarsRepositoryMock.clearCacheDir() } returns Result.Success(data = Unit)
 
@@ -292,7 +396,7 @@ class CalendarExportViewModelTest {
 
         @AfterEach
         fun tearDown() {
-            unmockkStatic(UI_MESSAGE_CONVERTER_FILE_NAME)
+            unmockkStatic(DATA_SOURCE_ERROR_CONVERTER_FILE_NAME)
         }
 
         @Test
@@ -319,8 +423,8 @@ class CalendarExportViewModelTest {
                     sut.onStartCalendarsExport()
                     advanceUntilIdle()
 
-                    val firstEvent = awaitItem()
-                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.MissingCalendarBitmap(
+                    val event = awaitItem()
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.MissingCalendarBitmap(
                         firstMissingBitmapIndex = 0,
                     )
 
@@ -382,8 +486,8 @@ class CalendarExportViewModelTest {
 
                     advanceUntilIdle()
 
-                    val firstEvent = awaitItem()
-                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
+                    val event = awaitItem()
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
                         messageId = errorMessageId,
                     )
 
@@ -454,8 +558,8 @@ class CalendarExportViewModelTest {
 
                     advanceUntilIdle()
 
-                    val firstEvent = awaitItem()
-                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.SaveCalendarsBitmapsSuccess(
+                    val event = awaitItem()
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.SaveCalendarsBitmapsSuccess(
                         calendarsContentUris = arrayListOf(
                             contentUriBitmapFileMock1,
                             contentUriBitmapFileMock2,
@@ -525,8 +629,8 @@ class CalendarExportViewModelTest {
 
                     advanceUntilIdle()
 
-                    val firstEvent = awaitItem()
-                    firstEvent shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
+                    val event = awaitItem()
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
                         messageId = errorMessageId,
                     )
 

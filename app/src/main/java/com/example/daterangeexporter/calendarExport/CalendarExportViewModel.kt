@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.daterangeexporter.calendarExport.models.CalendarFormUiState
 import com.example.daterangeexporter.calendarExport.models.CalendarMonthYear
 import com.example.daterangeexporter.calendarExport.models.RangeSelectionLabel
 import com.example.daterangeexporter.calendarExport.utils.interfaces.CalendarExportUtils
@@ -14,7 +15,8 @@ import com.example.daterangeexporter.core.application.contentProviders.interface
 import com.example.daterangeexporter.core.domain.repositories.CalendarsRepository
 import com.example.daterangeexporter.core.domain.utils.fold
 import com.example.daterangeexporter.core.domain.utils.onError
-import com.example.daterangeexporter.core.presentation.utils.toUiMessage
+import com.example.daterangeexporter.core.domain.validators.interfaces.CalendarsValidator
+import com.example.daterangeexporter.core.presentation.utils.uiConverters.toUiMessage
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
@@ -33,6 +35,7 @@ class CalendarExportViewModel(
     private val calendar: Calendar,
     private val appContext: Context,
     private val calendarsRepository: CalendarsRepository,
+    private val calendarsValidator: CalendarsValidator,
     private val calendarExportUtils: CalendarExportUtils,
     private val appFileProviderHandler: AppFileProviderHandler,
 ) : ViewModel() {
@@ -48,8 +51,8 @@ class CalendarExportViewModel(
     private val _selectedDates = MutableStateFlow<ImmutableSelectedDates>(persistentMapOf())
     val selectedDates = _selectedDates.asStateFlow()
 
-    private val _calendarLabelInput = MutableStateFlow<String?>(null)
-    val calendarLabelInput = _calendarLabelInput.asStateFlow()
+    private val _calendarFormUiState = MutableStateFlow(CalendarFormUiState())
+    val calendarFormUiState = _calendarFormUiState.asStateFlow()
 
     private val _calendarsBitmaps = MutableStateFlow<ImmutableMap<CalendarMonthYear, Bitmap?>>(
         persistentMapOf()
@@ -75,11 +78,33 @@ class CalendarExportViewModel(
     fun onClearDateRangeSelection() {
         _rangeSelectionCount.update { RangeSelectionLabel.First.count }
         _selectedDates.update { persistentMapOf() }
-        _calendarLabelInput.update { null }
+        _calendarFormUiState.update { CalendarFormUiState() }
     }
 
-    fun onCalendarLabelAssign(label: String) {
-        _calendarLabelInput.update { label }
+    fun onCalendarLabelChange() {
+        _calendarFormUiState.update {
+            it.copy(labelError = null)
+        }
+    }
+
+    fun onCalendarLabelInputCancel() {
+        _calendarFormUiState.update {
+            it.copy(labelError = null)
+        }
+    }
+
+    fun onCalendarLabelAssign(label: String?) {
+        calendarsValidator.validateLabel(label = label)
+            .onError { error ->
+                _calendarFormUiState.update { it.copy(labelError = error.toUiMessage()) }
+                return
+            }
+
+        _calendarFormUiState.update {
+            it.copy(label = label)
+        }
+
+        _uiEvents.trySend(UiEvents.CalendarLabelAssigned)
     }
 
     fun onStartCalendarsExport() {
@@ -181,6 +206,8 @@ class CalendarExportViewModel(
 
     sealed interface UiEvents {
         data class DataSourceError(@StringRes val messageId: Int) : UiEvents
+
+        data object CalendarLabelAssigned : UiEvents
 
         data class SaveCalendarsBitmapsSuccess(val calendarsContentUris: ArrayList<Uri>) : UiEvents
 
