@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.daterangeexporter"
+    namespace = "com.fstengineering.daterangeexporter"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.daterangeexporter"
+        applicationId = "com.fstengineering.daterangeexporter"
         minSdk = 30
         targetSdk = 35
         versionCode = 1
@@ -46,6 +46,7 @@ android {
     }
 
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }

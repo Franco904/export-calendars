@@ -26,8 +26,8 @@
         </activity>
 
         <provider
-            android:name="com.example.daterangeexporter.core.application.contentProviders.AppFileProvider"
-            android:authorities="com.example.daterangeexporter.fileprovider"
+            android:name="com.fstengineering.daterangeexporter.core.application.contentProviders.AppFileProvider"
+            android:authorities="com.fstengineering.daterangeexporter.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
