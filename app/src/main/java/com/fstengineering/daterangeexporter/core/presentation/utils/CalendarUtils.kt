@@ -3,7 +3,6 @@ package com.fstengineering.daterangeexporter.core.presentation.utils
 import android.content.Context
 import com.fstengineering.daterangeexporter.R
 import org.koin.core.component.KoinComponent
-import org.koin.core.context.GlobalContext.get
 import java.util.Calendar
 
 object CalendarUtils : KoinComponent {
