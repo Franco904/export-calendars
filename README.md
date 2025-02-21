@@ -33,8 +33,6 @@ https://github.com/user-attachments/assets/6ba6f9a7-04d3-45e0-afb9-31fd6506bb2d
 
 ```
 app/src/main/java/com/fstengineering/daterangeexporter
-├── CalendarExportApplication.kt           # Configures app components initialization
-├── MainActivity.kt                        # Sets Compose View content to be presented and other configs
 ├── calendarExport/                        # Calendar Export screen presentation layer components (Screen, ViewModel, etc.)
 │   ├── composables/                       # Calendar Export screen UI composables
 │   ├── models/                            # Calendar Export screen model classes
@@ -44,7 +42,9 @@ app/src/main/java/com/fstengineering/daterangeexporter
 ├── core/                                  # App scoped components and configs
 │   ├── application/                       # **[Layer]** Application logic and platform-wide concerns
 │   │   ├── contentProviders/              # App Content Providers implementations and handlers
-│   │   ├── di/                            # Dependency Injection configs and modules
+│   │   ├── di/                            # Dependency Injection related logic
+│   │   │   ├── modules/                   # Dependency Injection modules declarations
+│   │   │   ├── DependencyInjection.kt     # Dependency Injection main config and modules initialization
 │   │   ├── monitoring/                    # Logging configs (Analytics, crashes, etc.)
 │   │   ├── theme/                         # App theme configs
 │   │   │   ├── AppColorsKt                # App color schema config (light/dark mode)
@@ -67,6 +67,8 @@ app/src/main/java/com/fstengineering/daterangeexporter
 │   ├── presentation/                      # **[Layer]** Presentation UI logic
 │   │   ├── composables/                   # App global composables
 │   │   ├── utils/                         # Presentation layer utility classes and helpers
+├── CalendarExportApplication.kt           # Configures app components initialization
+├── MainActivity.kt                        # Sets Compose View content to be presented and other configs
 
 app/src/test/java/com/fstengineering/daterangeexporter
 ├── testUtils/                             # Local test utility functions and helpers
