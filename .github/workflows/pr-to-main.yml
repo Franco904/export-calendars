@@ -2,11 +2,11 @@ name: PR to main
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
 
 jobs:
-  local-test:
-    name: Run Local Tests
+  unit-test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -18,6 +18,34 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-  
-      - name: Run local tests
+
+      - name: Run unit tests
         run: ./gradlew testDebugUnitTest
+
+  integration-intrumented-test:
+    name: Run Integration Instrumented Tests
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Start Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          script: |
+            adb devices
+            ./gradlew :app:connectedAndroidTest --info -P android.testInstrumentationRunnerArguments.size=small

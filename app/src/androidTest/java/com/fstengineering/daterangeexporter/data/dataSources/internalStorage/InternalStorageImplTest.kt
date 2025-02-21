@@ -3,6 +3,7 @@ package com.fstengineering.daterangeexporter.data.dataSources.internalStorage
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage.InternalStorageImpl
 import kotlinx.coroutines.runBlocking
@@ -11,6 +12,7 @@ import org.junit.Before
 import org.junit.Test
 import java.io.File
 
+@SmallTest
 class InternalStorageImplTest {
     private lateinit var sut: InternalStorageImpl
 
