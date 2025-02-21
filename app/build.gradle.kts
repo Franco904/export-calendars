@@ -18,6 +18,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments.putAll(
+            mapOf(
+                "clearPackageData" to "true" // Revoke permissions and clear app state after each instrumented test
+            )
+        )
     }
 
     buildTypes {
@@ -89,6 +94,9 @@ dependencies {
     implementation(libs.kotlin.serialization.json)
 
     // Testing
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.kluent.android)
+
     testImplementation(libs.junit5.engine)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kluent)
