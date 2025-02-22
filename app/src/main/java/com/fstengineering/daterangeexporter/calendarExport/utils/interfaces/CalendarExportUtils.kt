@@ -5,7 +5,6 @@ import com.fstengineering.daterangeexporter.calendarExport.models.CalendarSelect
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 
-typealias MutableSelectedDates = ImmutableMap<CalendarMonthYear, MutableList<CalendarSelectedDate>>
 typealias ImmutableSelectedDates = ImmutableMap<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>
 
 interface CalendarExportUtils {
