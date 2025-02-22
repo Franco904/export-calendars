@@ -9,6 +9,7 @@ kotlinCollectionsImmutable = "0.3.7"
 serialization = "1.6.3"
 koin = "4.0.1"
 
+androidxTest = "1.6.1"
 junit5 = "5.11.4"
 kotlinxCoroutinesTest = "1.10.1"
 kluent = "1.73"
@@ -38,9 +39,11 @@ androidx-material-icons-extended = { group = "androidx.compose.material", name =
 koin-bom = { group = "io.insert-koin", name = "koin-bom", version.ref = "koin" }
 koin-android = { group = "io.insert-koin", name = "koin-android" }
 koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTest" }
 junit5-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 kluent = { module = "org.amshove.kluent:kluent", version.ref = "kluent" }
+kluent-android = { module = "org.amshove.kluent:kluent-android", version.ref = "kluent" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 faker = { module = "io.github.serpro69:kotlin-faker", version.ref = "faker" }
