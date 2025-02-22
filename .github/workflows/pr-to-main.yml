@@ -42,16 +42,8 @@ jobs:
       - name: Start Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 31
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          script: adb shell input keyevent 82 # Unlock screen
-
-      - name: Wait for Emulator to be Ready
-        run: |
-          adb wait-for-device
-          adb shell getprop sys.boot_completed | grep -m 1 '1' || exit 1
-
-      - name: Run Instrumented Tests
-        run: ./gradlew :app:connectedAndroidTest --info -P android.testInstrumentationRunnerArguments.size=small
+          script: ./gradlew :app:connectedAndroidTest --info -P android.testInstrumentationRunnerArguments.size=small
