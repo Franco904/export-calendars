@@ -3,22 +3,23 @@
 <br/>
 <div align="center">
     <img src="https://github.com/user-attachments/assets/a5e18061-711b-420b-9cd0-b8b76b5eea68" alt="Logo" width="100" height="100">
-    <h3 align="center">Date Range Exporter</h3>
+    <h3 align="center">Export Calendars</h3>
 </div>
 
 ## Overview 📌
 
-A native Android app that allows their users to select multiple date ranges and share a screenshot of each calendar with other apps. It also offers calendar edition like adding a label on each.
+A native Android app that allows their users to select multiple date ranges and share a screenshot of each calendar with other apps. It also offers calendar edition for adding a label on each one.
 
 ## Features 🚀
 
 - Up to **3 calendar date ranges selection**, distinguished by different drawings and colors;
 - Add a **chip label** to the calendars to identify the selection;
-- **Share selection screenshots** to other apps.
+- **Share selection screenshots** to other apps;
+- **Internationalization** for English, Spanish and Portuguese languages.
 
 ## Demo 📱
 
-https://github.com/user-attachments/assets/6ba6f9a7-04d3-45e0-afb9-31fd6506bb2d
+https://github.com/user-attachments/assets/29f22046-1bea-462c-9f7e-afcfe091e5f0
 
 ## Tech Stack 🛠️ 
 
@@ -28,6 +29,8 @@ https://github.com/user-attachments/assets/6ba6f9a7-04d3-45e0-afb9-31fd6506bb2d
 - **Design System**: Material Design UI
 - **Dependency Injection**: Koin
 - **Unit Testing**: JUnit / MockK / Kluent / Faker
+- **Integration Instrumented Testing**: JUnit / Kluent
+- **i18n**: Android Resource Framework
 
 ## Project Structure 📂
 
@@ -93,6 +96,10 @@ app/src/test/java/com/fstengineering/daterangeexporter
 - To run all the unit tests:
 
    `make test`, or `./gradlew :app:testDebugUnitTest`
+
+- To run all the integration tests:
+
+    `make integration-test`, or `./gradlew :app:connectedAndroidTest --info -P android.testInstrumentationRunnerArguments.size=small`
 
 ## Contributing 🤝
 
