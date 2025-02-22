@@ -1,0 +1,60 @@
+<resources>
+    <!-- App -->
+    <string name="app_name">Exportar Calendarios</string>
+
+    <!-- Base calendar -->
+    <string name="january_label">ENERO</string>
+    <string name="february_label">FEBRERO</string>
+    <string name="march_label">MARZO</string>
+    <string name="april_label">ABRIL</string>
+    <string name="may_label">MAYO</string>
+    <string name="june_label">JUNIO</string>
+    <string name="july_label">JULIO</string>
+    <string name="august_label">AGOSTO</string>
+    <string name="september_label">SEPTIEMBRE</string>
+    <string name="october_label">OCTUBRE</string>
+    <string name="november_label">NOVIEMBRE</string>
+    <string name="december_label">DICIEMBRE</string>
+
+    <string name="sunday_label">D</string>
+    <string name="monday_label">L</string>
+    <string name="tuesday_label">M</string>
+    <string name="wednesday_label">M</string>
+    <string name="thursday_label">J</string>
+    <string name="friday_label">V</string>
+    <string name="saturday_label">S</string>
+
+    <!-- Calendar export -->
+    <string name="export_calendar_title">Selección de períodos de fechas</string>
+
+    <string name="export_calendar_empty_screen_title">Ningún período seleccionado</string>
+    <string name="export_calendar_empty_screen_description">Empieza haciendo clic en el botón \"Seleccionar fechas\".</string>
+
+    <string name="select_calendar_dates_action_text">Seleccionar fechas</string>
+    <string name="clear_calendar_selected_dates_action_text">Borrar selección</string>
+
+    <string name="assign_calendar_label_action_text">Agregar etiqueta</string>
+    <string name="rename_calendar_action_text">Renombrar etiqueta</string>
+    <string name="add_other_date_range_action_text">Seleccionar otro</string>
+    <string name="export_calendar_action_text">Compartir</string>
+
+    <string name="date_range_picker_dialog_title">Selecciona un período</string>
+    <string name="date_range_picker_dialog_primary_button">OK</string>
+    <string name="date_range_picker_dialog_secondary_button">Cancelar</string>
+
+    <string name="calendar_label_assign_dialog_title_assign">Agregar etiqueta</string>
+    <string name="calendar_label_assign_dialog_title_rename">Renombrar etiqueta</string>
+    <string name="calendar_label_assign_dialog_field_placeholder">Nombre</string>
+    <string name="calendar_label_assign_dialog_primary_button">Guardar</string>
+    <string name="calendar_label_assign_dialog_secondary_button">Cancelar</string>
+
+    <!-- Inline errors -->
+    <string name="inline_calendar_label_is_blank">Obligatorio</string>
+    <string name="inline_calendar_label_too_big">La etiqueta puede tener un máximo de 25 caracteres</string>
+
+    <!-- Snackbar errors -->
+    <string name="snackbar_internal_storage_serialization_error">No se pudo guardar el archivo. Inténtalo de nuevo más tarde.</string>
+    <string name="snackbar_internal_storage_bitmap_compress_error">No se pudo procesar la imagen. Inténtalo de nuevo más tarde.</string>
+    <string name="snackbar_internal_storage_unknown_error">Error desconocido. Inténtalo de nuevo más tarde.</string>
+
+</resources>
