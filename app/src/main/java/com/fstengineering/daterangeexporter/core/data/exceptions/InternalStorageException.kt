@@ -21,7 +21,7 @@ sealed class InternalStorageException(message: String) : Exception(message) {
 
 fun Exception.asInternalStorageException(): InternalStorageException {
     val internalStorageException = when (this) {
-        is IOException, is SecurityException -> {
+        is IOException -> {
             InternalStorageException.IOError(message = "$cause: ${message ?: "Unknown I/O error"}")
         }
 

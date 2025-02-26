@@ -7,7 +7,7 @@ import org.koin.dsl.module
 val repositoryModule = module {
     single<CalendarsRepository> {
         CalendarsRepositoryImpl(
-            internalStorage = get(),
+            appSpecificStorage = get(),
             logger = get(),
         )
     }

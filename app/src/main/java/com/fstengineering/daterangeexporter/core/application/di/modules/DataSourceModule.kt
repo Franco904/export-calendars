@@ -1,7 +1,7 @@
 package com.fstengineering.daterangeexporter.core.application.di.modules
 
-import com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage.InternalStorageImpl
-import com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage.interfaces.InternalStorage
+import com.fstengineering.daterangeexporter.core.data.dataSources.appSpecificStorage.AppSpecificStorageImpl
+import com.fstengineering.daterangeexporter.core.data.dataSources.appSpecificStorage.interfaces.AppSpecificStorage
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -10,8 +10,8 @@ val dataSourceModule = module {
 }
 
 fun Module.configureInternalStorage() {
-    single<InternalStorage> {
-        InternalStorageImpl(
+    single<AppSpecificStorage> {
+        AppSpecificStorageImpl(
             appContext = get(),
         )
     }

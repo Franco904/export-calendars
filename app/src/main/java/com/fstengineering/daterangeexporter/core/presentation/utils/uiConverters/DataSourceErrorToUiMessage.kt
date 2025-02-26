@@ -5,7 +5,7 @@ import com.fstengineering.daterangeexporter.core.domain.utils.DataSourceError
 
 fun DataSourceError.toUiMessage() = when (this) {
     DataSourceError.InternalStorageError.IOError -> {
-        R.string.snackbar_internal_storage_serialization_error
+        R.string.dialog_internal_storage_io_error_message
     }
 
     DataSourceError.InternalStorageError.BitmapCompressError -> {

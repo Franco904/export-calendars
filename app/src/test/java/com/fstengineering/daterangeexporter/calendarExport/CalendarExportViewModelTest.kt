@@ -487,7 +487,7 @@ class CalendarExportViewModelTest {
                     advanceUntilIdle()
 
                     val event = awaitItem()
-                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
                         messageId = errorMessageId,
                     )
 
@@ -630,7 +630,7 @@ class CalendarExportViewModelTest {
                     advanceUntilIdle()
 
                     val event = awaitItem()
-                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
                         messageId = errorMessageId,
                     )
 

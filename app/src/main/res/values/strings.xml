@@ -53,8 +53,15 @@
     <string name="inline_calendar_label_too_big">Label can have a maximum of 25 characters</string>
 
     <!-- Snackbar errors -->
-    <string name="snackbar_internal_storage_serialization_error">Could not save the file. Please try again later.</string>
     <string name="snackbar_internal_storage_bitmap_compress_error">Could not process the image. Please try again later.</string>
     <string name="snackbar_internal_storage_unknown_error">Unknown error. Please try again later.</string>
+
+    <!-- Dialog errors -->
+    <string name="dialog_internal_storage_io_error_title">Insufficient storage</string>
+    <string name="dialog_internal_storage_io_error_message">Could not save the file because there is not enough space on the device. Clear unused files and try again later.</string>
+    <string name="dialog_internal_storage_io_error_message_with_remaining_space">Could not save the file because there is not enough space on the device. Clear unused files and try again later.\n\nFree space left: %1$s</string>
+    <string name="dialog_internal_storage_io_error_message_unavailable">Unavailable.</string>
+    <string name="dialog_internal_storage_io_error_primary_action">Free space</string>
+    <string name="dialog_internal_storage_io_error_secondary_action">OK</string>
 
 </resources>

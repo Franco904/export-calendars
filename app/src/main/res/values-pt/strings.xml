@@ -53,8 +53,15 @@
     <string name="inline_calendar_label_too_big">Marcador pode ter no máximo 25 caracteres</string>
 
     <!-- Snackbar errors -->
-    <string name="snackbar_internal_storage_serialization_error">Não foi possível salvar o arquivo. Tente novamente mais tarde.</string>
     <string name="snackbar_internal_storage_bitmap_compress_error">Não foi possível processar a imagem. Tente novamente mais tarde.</string>
     <string name="snackbar_internal_storage_unknown_error">Erro desconhecido. Tente novamente mais tarde.</string>
+
+    <!-- Dialog errors -->
+    <string name="dialog_internal_storage_io_error_title">Armazenamento insuficiente</string>
+    <string name="dialog_internal_storage_io_error_message">Não foi possível salvar o arquivo porque não há espaço suficiente no dispositivo. Apague arquivos sem uso e tente novamente mais tarde.</string>
+    <string name="dialog_internal_storage_io_error_message_with_remaining_space">Não foi possível salvar o arquivo porque não há espaço suficiente no dispositivo. Apague arquivos sem uso e tente novamente mais tarde.\n\nEspaço livre restante: %1$s</string>
+    <string name="dialog_internal_storage_io_error_message_unavailable">Indisponível</string>
+    <string name="dialog_internal_storage_io_error_primary_action">Liberar espaço</string>
+    <string name="dialog_internal_storage_io_error_secondary_action">OK</string>
 
 </resources>
