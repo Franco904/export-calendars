@@ -84,7 +84,7 @@ class CalendarsRepositoryImplTest {
                 )
 
                 result.shouldBeInstanceOf<Result.Error<*, *>>()
-                (result as Result.Error).error should { this is DataSourceError.InternalStorageError }
+                (result as Result.Error).error should { this is DataSourceError.AppSpecificStorageError }
             }
 
         @Test
@@ -129,7 +129,7 @@ class CalendarsRepositoryImplTest {
                 val result = sut.clearCacheDir()
 
                 result.shouldBeInstanceOf<Result.Error<*, *>>()
-                (result as Result.Error).error should { this is DataSourceError.InternalStorageError }
+                (result as Result.Error).error should { this is DataSourceError.AppSpecificStorageError }
             }
 
         @Test

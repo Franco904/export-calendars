@@ -88,7 +88,7 @@ fun CalendarExportScreen(
                     val uiMessage = uiEvent.error.toUiMessage()
 
                     when (uiEvent.error) {
-                        DataSourceError.InternalStorageError.IOError -> {
+                        DataSourceError.AppSpecificStorageError.IOError -> {
                             mustShowInsufficientStorageDialog = true
                         }
 

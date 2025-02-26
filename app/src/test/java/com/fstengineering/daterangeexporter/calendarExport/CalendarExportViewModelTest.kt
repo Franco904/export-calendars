@@ -390,7 +390,7 @@ class CalendarExportViewModelTest {
             } returns mockk<Uri>()
 
             every {
-                DataSourceError.InternalStorageError.UnknownError.toUiMessage()
+                DataSourceError.AppSpecificStorageError.UnknownError.toUiMessage()
             } returns 0
         }
 
@@ -459,14 +459,12 @@ class CalendarExportViewModelTest {
         @Test
         fun `Should emit a 'data source error' UI event and stop calendars export, when an error result comes out when clearing out the app's cache folder`() =
             runTest {
+                val errorResult = Result.Error<Unit, DataSourceError>(
+                    error = DataSourceError.AppSpecificStorageError.UnknownError,
+                )
                 coEvery {
                     calendarsRepositoryMock.clearCacheDir()
-                } returns Result.Error(error = DataSourceError.InternalStorageError.UnknownError)
-
-                val errorMessageId = faker.random.nextInt()
-                every {
-                    DataSourceError.InternalStorageError.UnknownError.toUiMessage()
-                } returns errorMessageId
+                } returns errorResult
 
                 val bitmapMock1 = mockk<Bitmap>(relaxUnitFun = true)
                 val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
@@ -488,7 +486,7 @@ class CalendarExportViewModelTest {
 
                     val event = awaitItem()
                     event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
-                        messageId = errorMessageId,
+                        error = errorResult.error,
                     )
 
                     expectNoEvents()
@@ -599,6 +597,9 @@ class CalendarExportViewModelTest {
                 val calendarMonthYear2 = newSelectedDatesRandom.keys.toList()[1]
                 val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
 
+                val errorResult = Result.Error<File, DataSourceError>(
+                    error = DataSourceError.AppSpecificStorageError.UnknownError,
+                )
                 coEvery {
                     val monthYearString = "${calendarMonthYear2.month}${calendarMonthYear2.year}"
 
@@ -607,11 +608,11 @@ class CalendarExportViewModelTest {
                         fileName = "calendar-$monthYearString-$currentTimestamp.png",
                         parentFolder = cacheFolderMock,
                     )
-                } returns Result.Error(error = DataSourceError.InternalStorageError.UnknownError)
+                } returns errorResult
 
                 val errorMessageId = faker.random.nextInt()
                 every {
-                    DataSourceError.InternalStorageError.UnknownError.toUiMessage()
+                    DataSourceError.AppSpecificStorageError.UnknownError.toUiMessage()
                 } returns errorMessageId
 
                 sut.uiEvents.test {
@@ -631,7 +632,7 @@ class CalendarExportViewModelTest {
 
                     val event = awaitItem()
                     event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
-                        messageId = errorMessageId,
+                        error = errorResult.error,
                     )
 
                     expectNoEvents()

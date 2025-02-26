@@ -4,15 +4,15 @@ import com.fstengineering.daterangeexporter.R
 import com.fstengineering.daterangeexporter.core.domain.utils.DataSourceError
 
 fun DataSourceError.toUiMessage() = when (this) {
-    DataSourceError.InternalStorageError.IOError -> {
+    DataSourceError.AppSpecificStorageError.IOError -> {
         R.string.dialog_internal_storage_io_error_message
     }
 
-    DataSourceError.InternalStorageError.BitmapCompressError -> {
+    DataSourceError.AppSpecificStorageError.BitmapCompressError -> {
         R.string.snackbar_internal_storage_bitmap_compress_error
     }
 
-    DataSourceError.InternalStorageError.UnknownError -> {
+    DataSourceError.AppSpecificStorageError.UnknownError -> {
         R.string.snackbar_internal_storage_unknown_error
     }
 }

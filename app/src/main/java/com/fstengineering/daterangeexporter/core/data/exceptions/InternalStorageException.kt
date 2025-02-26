@@ -13,9 +13,9 @@ sealed class InternalStorageException(message: String) : Exception(message) {
     class UnknownError(message: String?) : InternalStorageException("Unknown error: $message.")
 
     fun toInternalStorageError() = when (this) {
-        is IOError -> DataSourceError.InternalStorageError.IOError
-        is BitmapCompressError -> DataSourceError.InternalStorageError.BitmapCompressError
-        is UnknownError -> DataSourceError.InternalStorageError.UnknownError
+        is IOError -> DataSourceError.AppSpecificStorageError.IOError
+        is BitmapCompressError -> DataSourceError.AppSpecificStorageError.BitmapCompressError
+        is UnknownError -> DataSourceError.AppSpecificStorageError.UnknownError
     }
 }
 
