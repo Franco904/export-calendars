@@ -1,11 +1,9 @@
 package com.fstengineering.daterangeexporter.calendarExport
 
-import android.app.usage.StorageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.storage.StorageManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.layout.Spacer
@@ -31,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.getSystemService
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fstengineering.daterangeexporter.calendarExport.composables.BaseCalendar
 import com.fstengineering.daterangeexporter.calendarExport.composables.CalendarExportTopBar
@@ -59,7 +56,6 @@ fun CalendarExportScreen(
     showSnackbar: (String) -> Unit = { _ -> },
 ) {
     val context = LocalContext.current
-    val storageStatsManager = remember { context.getSystemService<StorageStatsManager>() }
 
     val lazyListState = rememberLazyListState()
 
@@ -240,9 +236,8 @@ fun CalendarExportScreen(
 
         if (mustShowInsufficientStorageDialog) {
             InsufficientStorageDialog(
-                context = context,
-                freeSpaceLeft = storageStatsManager?.getFreeBytes(StorageManager.UUID_DEFAULT),
-                totalSpace = storageStatsManager?.getTotalBytes(StorageManager.UUID_DEFAULT),
+                freeSpaceLeft = viewModel.getDeviceFreeStorageBytes(),
+                totalSpace = viewModel.getDeviceTotalStorageBytes(),
                 onFreeSpace = {
                     val storageInsufficientIntent = Intent(Intent.ACTION_MANAGE_PACKAGE_STORAGE)
                     context.startActivity(storageInsufficientIntent)

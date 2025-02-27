@@ -1,6 +1,5 @@
 package com.fstengineering.daterangeexporter.calendarExport.composables.dialogs
 
-import android.content.Context
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -15,19 +14,15 @@ import com.fstengineering.daterangeexporter.R
 
 @Composable
 fun InsufficientStorageDialog(
-    context: Context,
-    freeSpaceLeft: Long?,
-    totalSpace: Long?,
+    freeSpaceLeft: Long,
+    totalSpace: Long,
     onFreeSpace: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val freeSpaceText = remember(freeSpaceLeft, totalSpace) {
-        if (freeSpaceLeft == null || totalSpace == null) context.getString(R.string.dialog_internal_storage_io_error_message_unavailable)
-        else {
-            val freeSpacePercent = (freeSpaceLeft.toDouble() / totalSpace.toDouble() * 100).toInt()
-            "$freeSpacePercent%"
-        }
+        val freeSpacePercent = (freeSpaceLeft.toDouble() / totalSpace.toDouble() * 100).toInt()
+        "$freeSpacePercent%"
     }
 
     AlertDialog(

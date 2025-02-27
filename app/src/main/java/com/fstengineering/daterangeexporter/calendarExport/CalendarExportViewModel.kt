@@ -204,6 +204,14 @@ class CalendarExportViewModel(
         }
     }
 
+    fun getDeviceFreeStorageBytes(): Long {
+        return calendarsRepository.getDeviceFreeStorageBytes()
+    }
+
+    fun getDeviceTotalStorageBytes(): Long {
+        return calendarsRepository.getDeviceTotalStorageBytes()
+    }
+
     sealed interface UiEvents {
         data class DataSourceErrorEvent(val error: DataSourceError) : UiEvents
 
