@@ -236,8 +236,7 @@ fun CalendarExportScreen(
 
         if (mustShowInsufficientStorageDialog) {
             InsufficientStorageDialog(
-                freeSpaceLeft = viewModel.getDeviceFreeStorageBytes(),
-                totalSpace = viewModel.getDeviceTotalStorageBytes(),
+                freeSpacePercent = viewModel.getDeviceFreeStoragePercent(),
                 onFreeSpace = {
                     val storageInsufficientIntent = Intent(Intent.ACTION_MANAGE_PACKAGE_STORAGE)
                     context.startActivity(storageInsufficientIntent)

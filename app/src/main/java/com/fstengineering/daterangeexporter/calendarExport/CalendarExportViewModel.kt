@@ -122,11 +122,10 @@ class CalendarExportViewModel(
     }
 
     private suspend fun checkMissingCalendarsBitmaps() {
-        val isThereAnyCalendarBitmapMissing = calendarsBitmaps.value.values.any { it == null }
+        val firstMissingBitmapCalendar =
+            calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
 
-        if (isThereAnyCalendarBitmapMissing) {
-            val firstMissingBitmapCalendar =
-                calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
+        if (firstMissingBitmapCalendar != null) {
             val firstMissingCalendarIndex =
                 selectedDates.value.keys.indexOfFirst { calendar -> calendar == firstMissingBitmapCalendar }
 
@@ -204,12 +203,11 @@ class CalendarExportViewModel(
         }
     }
 
-    fun getDeviceFreeStorageBytes(): Long {
-        return calendarsRepository.getDeviceFreeStorageBytes()
-    }
+    fun getDeviceFreeStoragePercent(): Int {
+        val freeSpaceLeft = calendarsRepository.getDeviceFreeStorageBytes()
+        val totalSpace = calendarsRepository.getDeviceTotalStorageBytes()
 
-    fun getDeviceTotalStorageBytes(): Long {
-        return calendarsRepository.getDeviceTotalStorageBytes()
+        return (freeSpaceLeft.toDouble() / totalSpace.toDouble() * 100).toInt()
     }
 
     sealed interface UiEvents {
