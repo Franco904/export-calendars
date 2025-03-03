@@ -41,7 +41,7 @@ import com.fstengineering.daterangeexporter.calendarExport.composables.dialogs.I
 import com.fstengineering.daterangeexporter.calendarExport.models.RangeSelectionLabel
 import com.fstengineering.daterangeexporter.core.application.theme.AppTheme
 import com.fstengineering.daterangeexporter.core.domain.utils.DataSourceError
-import com.fstengineering.daterangeexporter.core.presentation.utils.IMAGE_PNG_TYPE
+import com.fstengineering.daterangeexporter.core.presentation.constants.IMAGE_PNG_MIME_TYPE
 import com.fstengineering.daterangeexporter.core.presentation.utils.itemsIndexed
 import com.fstengineering.daterangeexporter.core.presentation.utils.showShareSheet
 import com.fstengineering.daterangeexporter.core.presentation.utils.uiConverters.toUiMessage
@@ -252,11 +252,16 @@ fun CalendarExportScreen(
 private fun Context.exportCalendars(
     contentUris: ArrayList<Uri>,
 ) {
-    showShareSheet(action = Intent.ACTION_SEND_MULTIPLE) {
-        type = IMAGE_PNG_TYPE
+    val action = if (contentUris.size == 1) {
+        Intent.ACTION_SEND
+    } else Intent.ACTION_SEND_MULTIPLE
+
+    showShareSheet(action = action) {
+        type = IMAGE_PNG_MIME_TYPE
         flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
 
-        putParcelableArrayListExtra(Intent.EXTRA_STREAM, contentUris)
+        if (contentUris.size == 1) putExtra(Intent.EXTRA_STREAM, contentUris[0])
+        else putParcelableArrayListExtra(Intent.EXTRA_STREAM, contentUris)
     }
 }
 
