@@ -8,7 +8,7 @@
 
 ## Overview 📌
 
-A native Android app that allows their users to select multiple date ranges and share a screenshot of each calendar with other apps. It also offers calendar edition for adding a label on each one.
+A native Android app that allows users to select multiple date ranges and share a screenshot of each calendar with other apps. It also offers calendar edition for adding a label on each one.
 
 ## Features 🚀
 
@@ -16,6 +16,11 @@ A native Android app that allows their users to select multiple date ranges and 
 - Add a **chip label** to the calendars to identify the selection;
 - **Share selection screenshots** to other apps;
 - **Internationalization** for English, Spanish and Portuguese languages.
+
+Worked with:
+- Date/date range handling APIs
+- Saving files to app internal storage cache dir.
+- Sharing files content URIs with other apps with a custom FileProvider (content provider) implementation.
 
 ## Demo 📱
 
@@ -56,7 +61,8 @@ app/src/main/java/com/fstengineering/daterangeexporter
 │   │   │   ├── AppTypographyKt            # App typography config
 │   ├── data/                              # **[Layer]** Data persistence business logic
 │   │   ├── dataSources/                   # Data sources handlers interfaces and implementations
-│   │   │   ├── internalStorage/           # App-specific storage handlers
+│   │   │   ├── appSpecificStorage/        # App-specific storage handlers
+│   │   │   ├── storageStats/              # High level stats from device main storage volume
 │   │   ├── exceptions/                    # Data layer exceptions
 │   │   ├── repositories/                  # Repository implementations with data source combination logic
 │   ├── domain/                            # **[Layer]** Plataform agnostic business logic
