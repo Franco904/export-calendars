@@ -1,7 +1,7 @@
 package com.fstengineering.daterangeexporter.core.domain.utils
 
 sealed interface DataSourceError : Error {
-    enum class InternalStorageError : DataSourceError {
+    enum class AppSpecificStorageError : DataSourceError {
         IOError,
         BitmapCompressError,
         UnknownError,

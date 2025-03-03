@@ -2,10 +2,12 @@ package com.fstengineering.daterangeexporter.core.data.repositories
 
 import android.graphics.Bitmap
 import com.fstengineering.daterangeexporter.core.application.monitoring.interfaces.AppLogger
-import com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage.interfaces.InternalStorage
+import com.fstengineering.daterangeexporter.core.data.dataSources.appSpecificStorage.interfaces.AppSpecificStorage
+import com.fstengineering.daterangeexporter.core.data.dataSources.storageStats.interfaces.StorageStatsHandler
 import com.fstengineering.daterangeexporter.core.data.exceptions.InternalStorageException
 import com.fstengineering.daterangeexporter.core.domain.utils.DataSourceError
 import com.fstengineering.daterangeexporter.core.domain.utils.Result
+import com.fstengineering.daterangeexporter.testUtils.faker
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -23,7 +25,8 @@ import java.io.File
 class CalendarsRepositoryImplTest {
     private lateinit var sut: CalendarsRepositoryImpl
 
-    private lateinit var internalStorageMock: InternalStorage
+    private lateinit var appSpecificStorageMock: AppSpecificStorage
+    private lateinit var storageStatsHandlerMock: StorageStatsHandler
     private lateinit var loggerMock: AppLogger
 
     private val bitmapMock = mockk<Bitmap>()
@@ -31,11 +34,13 @@ class CalendarsRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
-        internalStorageMock = mockk(relaxUnitFun = true)
+        appSpecificStorageMock = mockk(relaxUnitFun = true)
+        storageStatsHandlerMock = mockk(relaxUnitFun = true)
         loggerMock = mockk(relaxUnitFun = true)
 
         sut = CalendarsRepositoryImpl(
-            internalStorage = internalStorageMock,
+            appSpecificStorage = appSpecificStorageMock,
+            storageStatsHandler = storageStatsHandlerMock,
             logger = loggerMock,
         )
     }
@@ -49,7 +54,7 @@ class CalendarsRepositoryImplTest {
                 val expectedFile = mockk<File>()
 
                 coEvery {
-                    internalStorageMock.saveImage(
+                    appSpecificStorageMock.saveImage(
                         bitmap = bitmapMock,
                         fileName = fileNameFake,
                         parentFolder = null,
@@ -70,7 +75,7 @@ class CalendarsRepositoryImplTest {
         fun `Should return error result with internal storage error when an InternalStorageException is thrown`() =
             runTest {
                 coEvery {
-                    internalStorageMock.saveImage(
+                    appSpecificStorageMock.saveImage(
                         bitmap = bitmapMock,
                         fileName = fileNameFake,
                         parentFolder = null,
@@ -84,13 +89,13 @@ class CalendarsRepositoryImplTest {
                 )
 
                 result.shouldBeInstanceOf<Result.Error<*, *>>()
-                (result as Result.Error).error should { this is DataSourceError.InternalStorageError }
+                (result as Result.Error).error should { this is DataSourceError.AppSpecificStorageError }
             }
 
         @Test
         fun `Should rethrow the exception when an unexpected exception is thrown`() = runTest {
             coEvery {
-                internalStorageMock.saveImage(
+                appSpecificStorageMock.saveImage(
                     bitmap = bitmapMock,
                     fileName = fileNameFake,
                     parentFolder = null,
@@ -116,26 +121,26 @@ class CalendarsRepositoryImplTest {
         fun `Should successfully clear the app's cache dir`() = runTest {
             sut.clearCacheDir()
 
-            coVerify(exactly = 1) { internalStorageMock.clearCacheDir() }
+            coVerify(exactly = 1) { appSpecificStorageMock.clearCacheDir() }
         }
 
         @Test
         fun `Should return error result with internal storage error when an InternalStorageException is thrown`() =
             runTest {
                 coEvery {
-                    internalStorageMock.clearCacheDir()
+                    appSpecificStorageMock.clearCacheDir()
                 } throws InternalStorageException.UnknownError(message = "test")
 
                 val result = sut.clearCacheDir()
 
                 result.shouldBeInstanceOf<Result.Error<*, *>>()
-                (result as Result.Error).error should { this is DataSourceError.InternalStorageError }
+                (result as Result.Error).error should { this is DataSourceError.AppSpecificStorageError }
             }
 
         @Test
         fun `Should rethrow the exception when an unexpected exception is thrown`() = runTest {
             coEvery {
-                internalStorageMock.clearCacheDir()
+                appSpecificStorageMock.clearCacheDir()
             } throws Exception("unexpected")
 
             val exception = assertThrows<Exception> {
@@ -143,6 +148,40 @@ class CalendarsRepositoryImplTest {
             }
 
             exception.message shouldBeEqualTo "unexpected"
+        }
+    }
+
+    @Nested
+    @DisplayName("getDeviceFreeStorageBytes")
+    inner class GetDeviceFreeStorageBytesTests {
+        @Test
+        fun `Should return the device storage current free space`() = runTest {
+            val expectedFreeStorageSpace = faker.random.nextLong()
+
+            coEvery {
+                storageStatsHandlerMock.getDeviceFreeStorageBytes()
+            } returns expectedFreeStorageSpace
+
+            val freeStorageSpace = sut.getDeviceFreeStorageBytes()
+
+            freeStorageSpace shouldBeEqualTo expectedFreeStorageSpace
+        }
+    }
+
+    @Nested
+    @DisplayName("getDeviceTotalStorageBytes")
+    inner class GetDeviceTotalStorageBytesTests {
+        @Test
+        fun `Should return the device storage total space`() = runTest {
+            val expectedTotalStorageSpace = faker.random.nextLong()
+
+            coEvery {
+                storageStatsHandlerMock.getDeviceTotalStorageBytes()
+            } returns expectedTotalStorageSpace
+
+            val totalStorageSpace = sut.getDeviceTotalStorageBytes()
+
+            totalStorageSpace shouldBeEqualTo expectedTotalStorageSpace
         }
     }
 }

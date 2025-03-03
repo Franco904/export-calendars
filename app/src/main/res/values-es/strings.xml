@@ -53,8 +53,15 @@
     <string name="inline_calendar_label_too_big">La etiqueta puede tener un máximo de 25 caracteres</string>
 
     <!-- Snackbar errors -->
-    <string name="snackbar_internal_storage_serialization_error">No se pudo guardar el archivo. Inténtalo de nuevo más tarde.</string>
     <string name="snackbar_internal_storage_bitmap_compress_error">No se pudo procesar la imagen. Inténtalo de nuevo más tarde.</string>
     <string name="snackbar_internal_storage_unknown_error">Error desconocido. Inténtalo de nuevo más tarde.</string>
+
+    <!-- Dialog errors -->
+    <string name="dialog_internal_storage_io_error_title">Almacenamiento insuficiente</string>
+    <string name="dialog_internal_storage_io_error_message">No se pudo guardar el archivo porque no hay suficiente espacio en el dispositivo. Borre los archivos no utilizados y inténtalo de nuevo más tarde.</string>
+    <string name="dialog_internal_storage_io_error_message_with_remaining_space">No se pudo guardar el archivo porque no hay espacio suficiente en el dispositivo. Borre los archivos no utilizados y inténtalo de nuevo más tarde.\n\nEspacio libre restante: %1$s</string>
+    <string name="dialog_internal_storage_io_error_message_unavailable">Indisponible</string>
+    <string name="dialog_internal_storage_io_error_primary_action">Liberar espacio</string>
+    <string name="dialog_internal_storage_io_error_secondary_action">OK</string>
 
 </resources>

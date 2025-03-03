@@ -1,8 +1,8 @@
-package com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage
+package com.fstengineering.daterangeexporter.core.data.dataSources.appSpecificStorage
 
 import android.content.Context
 import android.graphics.Bitmap
-import com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage.interfaces.InternalStorage
+import com.fstengineering.daterangeexporter.core.data.dataSources.appSpecificStorage.interfaces.AppSpecificStorage
 import com.fstengineering.daterangeexporter.core.data.exceptions.asInternalStorageException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -10,9 +10,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class InternalStorageImpl(
+class AppSpecificStorageImpl(
     private val appContext: Context,
-) : InternalStorage {
+) : AppSpecificStorage {
     override suspend fun saveImage(
         bitmap: Bitmap,
         fileName: String,

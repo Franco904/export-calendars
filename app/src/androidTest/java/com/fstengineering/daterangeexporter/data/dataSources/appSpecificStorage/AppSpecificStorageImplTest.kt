@@ -1,11 +1,11 @@
-package com.fstengineering.daterangeexporter.data.dataSources.internalStorage
+package com.fstengineering.daterangeexporter.data.dataSources.appSpecificStorage
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage.InternalStorageImpl
+import com.fstengineering.daterangeexporter.core.data.dataSources.appSpecificStorage.AppSpecificStorageImpl
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Before
@@ -13,8 +13,8 @@ import org.junit.Test
 import java.io.File
 
 @SmallTest
-class InternalStorageImplTest {
-    private lateinit var sut: InternalStorageImpl
+class AppSpecificStorageImplTest {
+    private lateinit var sut: AppSpecificStorageImpl
 
     private lateinit var appContext: Context
 
@@ -22,7 +22,7 @@ class InternalStorageImplTest {
     fun setUp() {
         appContext = InstrumentationRegistry.getInstrumentation().targetContext
 
-        sut = InternalStorageImpl(
+        sut = AppSpecificStorageImpl(
             appContext = appContext,
         )
     }

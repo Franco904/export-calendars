@@ -1,4 +1,4 @@
-package com.fstengineering.daterangeexporter.calendarExport.composables
+package com.fstengineering.daterangeexporter.calendarExport.composables.dialogs
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth

@@ -13,4 +13,8 @@ interface CalendarsRepository {
     ): Result<File, DataSourceError>
 
     suspend fun clearCacheDir(): Result<Unit, DataSourceError>
+
+    fun getDeviceFreeStorageBytes(): Long
+
+    fun getDeviceTotalStorageBytes(): Long
 }

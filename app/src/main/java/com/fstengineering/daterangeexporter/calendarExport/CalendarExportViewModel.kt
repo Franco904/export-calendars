@@ -3,7 +3,6 @@ package com.fstengineering.daterangeexporter.calendarExport
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fstengineering.daterangeexporter.calendarExport.models.CalendarFormUiState
@@ -13,6 +12,7 @@ import com.fstengineering.daterangeexporter.calendarExport.utils.interfaces.Cale
 import com.fstengineering.daterangeexporter.calendarExport.utils.interfaces.ImmutableSelectedDates
 import com.fstengineering.daterangeexporter.core.application.contentProviders.interfaces.AppFileProviderHandler
 import com.fstengineering.daterangeexporter.core.domain.repositories.CalendarsRepository
+import com.fstengineering.daterangeexporter.core.domain.utils.DataSourceError
 import com.fstengineering.daterangeexporter.core.domain.utils.fold
 import com.fstengineering.daterangeexporter.core.domain.utils.onError
 import com.fstengineering.daterangeexporter.core.domain.validators.interfaces.CalendarsValidator
@@ -122,11 +122,10 @@ class CalendarExportViewModel(
     }
 
     private suspend fun checkMissingCalendarsBitmaps() {
-        val isThereAnyCalendarBitmapMissing = calendarsBitmaps.value.values.any { it == null }
+        val firstMissingBitmapCalendar =
+            calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
 
-        if (isThereAnyCalendarBitmapMissing) {
-            val firstMissingBitmapCalendar =
-                calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
+        if (firstMissingBitmapCalendar != null) {
             val firstMissingCalendarIndex =
                 selectedDates.value.keys.indexOfFirst { calendar -> calendar == firstMissingBitmapCalendar }
 
@@ -143,7 +142,7 @@ class CalendarExportViewModel(
         viewModelScope.launch {
             calendarsRepository.clearCacheDir()
                 .onError { error ->
-                    _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
+                    _uiEvents.send(UiEvents.DataSourceErrorEvent(error = error))
                     return@launch
                 }
 
@@ -182,7 +181,7 @@ class CalendarExportViewModel(
                 onError = { error ->
                     _calendarsBitmaps.update { persistentMapOf() }
 
-                    _uiEvents.send(UiEvents.DataSourceError(messageId = error.toUiMessage()))
+                    _uiEvents.send(UiEvents.DataSourceErrorEvent(error = error))
                     return null
                 },
                 onSuccess = { file ->
@@ -204,8 +203,15 @@ class CalendarExportViewModel(
         }
     }
 
+    fun getDeviceFreeStoragePercent(): Int {
+        val freeSpaceLeft = calendarsRepository.getDeviceFreeStorageBytes()
+        val totalSpace = calendarsRepository.getDeviceTotalStorageBytes()
+
+        return (freeSpaceLeft.toDouble() / totalSpace.toDouble() * 100).toInt()
+    }
+
     sealed interface UiEvents {
-        data class DataSourceError(@StringRes val messageId: Int) : UiEvents
+        data class DataSourceErrorEvent(val error: DataSourceError) : UiEvents
 
         data object CalendarLabelAssigned : UiEvents
 

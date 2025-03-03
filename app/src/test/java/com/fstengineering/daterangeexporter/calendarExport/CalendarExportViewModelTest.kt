@@ -100,26 +100,24 @@ class CalendarExportViewModelTest {
     @DisplayName("currentDayOfMonth")
     inner class CurrentDayOfMonthTests {
         @Test
-        fun `Should hold correct day of month based on the Calendar API`() =
-            runTest {
-                sut.currentDayOfMonth shouldBeEqualTo currentDayOfMonthRandom
-            }
+        fun `Should hold correct day of month based on the Calendar API`() {
+            sut.currentDayOfMonth shouldBeEqualTo currentDayOfMonthRandom
+        }
     }
 
     @Nested
     @DisplayName("initialCalendar")
     inner class InitialCalendarTests {
         @Test
-        fun `Should hold correct initial calendar based on the values of current month and year`() =
-            runTest {
-                val adjustedMonthRandom = currentMonthRandom + 1
+        fun `Should hold correct initial calendar based on the values of current month and year`() {
+            val adjustedMonthRandom = currentMonthRandom + 1
 
-                sut.initialCalendar shouldBeEqualTo CalendarMonthYear(
-                    id = adjustedMonthRandom + currentYearRandom,
-                    month = adjustedMonthRandom,
-                    year = currentYearRandom,
-                )
-            }
+            sut.initialCalendar shouldBeEqualTo CalendarMonthYear(
+                id = adjustedMonthRandom + currentYearRandom,
+                month = adjustedMonthRandom,
+                year = currentYearRandom,
+            )
+        }
     }
 
     @Nested
@@ -135,135 +133,128 @@ class CalendarExportViewModelTest {
         }
 
         @Test
-        fun `Should update the selected dates based on start & end selected timestamps, current range selection and current selected dates`() =
-            runTest {
-                val mapSizeRandom = faker.random.nextInt(min = 1, max = 200)
-                val newSelectedDatesRandom =
-                    mutableMapOf<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>()
-                        .apply {
-                            for (i in 0..mapSizeRandom) {
-                                val randomSelectedDatesSize =
-                                    faker.random.nextInt(min = 1, max = 31)
+        fun `Should update the selected dates based on start & end selected timestamps, current range selection and current selected dates`() {
+            val mapSizeRandom = faker.random.nextInt(min = 1, max = 200)
+            val newSelectedDatesRandom =
+                mutableMapOf<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>()
+                    .apply {
+                        for (i in 0..mapSizeRandom) {
+                            val randomSelectedDatesSize =
+                                faker.random.nextInt(min = 1, max = 31)
 
-                                val randomCalendarMonthYear = createCalendarMonthYearRandom()
-                                val randomSelectedDatesList = List(randomSelectedDatesSize) {
-                                    createCalendarSelectedDateRandom()
-                                }.toImmutableList()
+                            val randomCalendarMonthYear = createCalendarMonthYearRandom()
+                            val randomSelectedDatesList = List(randomSelectedDatesSize) {
+                                createCalendarSelectedDateRandom()
+                            }.toImmutableList()
 
-                                put(randomCalendarMonthYear, randomSelectedDatesList)
-                            }
+                            put(randomCalendarMonthYear, randomSelectedDatesList)
                         }
-                        .toImmutableMap()
+                    }
+                    .toImmutableMap()
 
-                every {
-                    calendarExportUtilsMock.getNewSelectedDates(
-                        startDateTimeMillis = startDateTimeMillisRandom,
-                        endDateTimeMillis = endDateTimeMillisRandom,
-                        currentRangeCount = sut.rangeSelectionCount.value,
-                        currentSelectedDates = sut.selectedDates.value,
-                    )
-                } returns newSelectedDatesRandom
-
-                // assert default value
-                sut.selectedDates.value shouldBeEqualTo persistentMapOf()
-
-                sut.onDateRangeSelected(
+            every {
+                calendarExportUtilsMock.getNewSelectedDates(
                     startDateTimeMillis = startDateTimeMillisRandom,
                     endDateTimeMillis = endDateTimeMillisRandom,
+                    currentRangeCount = sut.rangeSelectionCount.value,
+                    currentSelectedDates = sut.selectedDates.value,
                 )
+            } returns newSelectedDatesRandom
 
-                sut.selectedDates.value shouldBeEqualTo newSelectedDatesRandom
-            }
+            // assert default value
+            sut.selectedDates.value shouldBeEqualTo persistentMapOf()
+
+            sut.onDateRangeSelected(
+                startDateTimeMillis = startDateTimeMillisRandom,
+                endDateTimeMillis = endDateTimeMillisRandom,
+            )
+
+            sut.selectedDates.value shouldBeEqualTo newSelectedDatesRandom
+        }
 
         @Test
-        fun `Should increment the range selection counter by one`() =
-            runTest {
-                // not core for this test
-                every {
-                    calendarExportUtilsMock.getNewSelectedDates(
-                        startDateTimeMillis = startDateTimeMillisRandom,
-                        endDateTimeMillis = endDateTimeMillisRandom,
-                        currentRangeCount = sut.rangeSelectionCount.value,
-                        currentSelectedDates = sut.selectedDates.value,
-                    )
-                } returns persistentMapOf()
-
-                // assert default value
-                val defaultRangeSelectionCount = sut.rangeSelectionCount.value
-                defaultRangeSelectionCount shouldBeEqualTo 1
-
-                sut.onDateRangeSelected(
+        fun `Should increment the range selection counter by one`() {
+            // not core for this test
+            every {
+                calendarExportUtilsMock.getNewSelectedDates(
                     startDateTimeMillis = startDateTimeMillisRandom,
                     endDateTimeMillis = endDateTimeMillisRandom,
+                    currentRangeCount = sut.rangeSelectionCount.value,
+                    currentSelectedDates = sut.selectedDates.value,
                 )
+            } returns persistentMapOf()
 
-                sut.rangeSelectionCount.value shouldBeEqualTo defaultRangeSelectionCount + 1
-            }
+            // assert default value
+            val defaultRangeSelectionCount = sut.rangeSelectionCount.value
+            defaultRangeSelectionCount shouldBeEqualTo 1
+
+            sut.onDateRangeSelected(
+                startDateTimeMillis = startDateTimeMillisRandom,
+                endDateTimeMillis = endDateTimeMillisRandom,
+            )
+
+            sut.rangeSelectionCount.value shouldBeEqualTo defaultRangeSelectionCount + 1
+        }
     }
 
     @Nested
     @DisplayName("onClearDateRangeSelection")
     inner class OnClearDateRangeSelectionTests {
         @Test
-        fun `Should restore the range selection counter count to one`() =
-            runTest {
-                sut.onClearDateRangeSelection()
+        fun `Should restore the range selection counter count to one`() {
+            sut.onClearDateRangeSelection()
 
-                sut.rangeSelectionCount.value shouldBeEqualTo 1
-            }
-
-        @Test
-        fun `Should clear the current selected dates map`() =
-            runTest {
-                sut.onClearDateRangeSelection()
-
-                sut.selectedDates.value shouldBeEqualTo persistentMapOf()
-            }
+            sut.rangeSelectionCount.value shouldBeEqualTo 1
+        }
 
         @Test
-        fun `Should clear the current calendar label input text`() =
-            runTest {
-                sut.onClearDateRangeSelection()
+        fun `Should clear the current selected dates map`() {
+            sut.onClearDateRangeSelection()
 
-                with(sut.calendarFormUiState.value) {
-                    label shouldBeEqualTo null
-                    labelError shouldBeEqualTo null
-                }
+            sut.selectedDates.value shouldBeEqualTo persistentMapOf()
+        }
+
+        @Test
+        fun `Should clear the current calendar label input text`() {
+            sut.onClearDateRangeSelection()
+
+            with(sut.calendarFormUiState.value) {
+                label shouldBeEqualTo null
+                labelError shouldBeEqualTo null
             }
+        }
     }
 
     @Nested
     @DisplayName("onCalendarLabelChange")
     inner class OnCalendarLabelChangeTests {
         @Test
-        fun `Should clear label field error, keeping the current label text unmodified`() =
-            runTest {
-                val currentLabel = sut.calendarFormUiState.value.label
+        fun `Should clear label field error, keeping the current label text unmodified`() {
+            val currentLabel = sut.calendarFormUiState.value.label
 
-                sut.onCalendarLabelChange()
+            sut.onCalendarLabelChange()
 
-                with(sut.calendarFormUiState.value) {
-                    label shouldBeEqualTo currentLabel
-                    labelError shouldBeEqualTo null
-                }
+            with(sut.calendarFormUiState.value) {
+                label shouldBeEqualTo currentLabel
+                labelError shouldBeEqualTo null
             }
+        }
     }
 
     @Nested
     @DisplayName("onCalendarLabelInputCancel")
     inner class OnCalendarLabelInputCancelTests {
         @Test
-        fun `Should clear label field error, keeping the current label text unmodified`() =
-            runTest {
-                val currentLabel = sut.calendarFormUiState.value.label
+        fun `Should clear label field error, keeping the current label text unmodified`() {
+            val currentLabel = sut.calendarFormUiState.value.label
 
-                sut.onCalendarLabelInputCancel()
+            sut.onCalendarLabelInputCancel()
 
-                with(sut.calendarFormUiState.value) {
-                    label shouldBeEqualTo currentLabel
-                    labelError shouldBeEqualTo null
-                }
+            with(sut.calendarFormUiState.value) {
+                label shouldBeEqualTo currentLabel
+                labelError shouldBeEqualTo null
             }
+        }
     }
 
     @Nested
@@ -308,19 +299,18 @@ class CalendarExportViewModelTest {
             }
 
         @Test
-        fun `Should update the current calendar label input text, when the validation results in success`() =
-            runTest {
-                every {
-                    calendarsValidatorMock.validateLabel(randomLabel)
-                } returns Result.Success(data = Unit)
+        fun `Should update the current calendar label input text, when the validation results in success`() {
+            every {
+                calendarsValidatorMock.validateLabel(randomLabel)
+            } returns Result.Success(data = Unit)
 
-                sut.onCalendarLabelAssign(label = randomLabel)
+            sut.onCalendarLabelAssign(label = randomLabel)
 
-                with(sut.calendarFormUiState.value) {
-                    label shouldBeEqualTo randomLabel
-                    labelError shouldBeEqualTo null
-                }
+            with(sut.calendarFormUiState.value) {
+                label shouldBeEqualTo randomLabel
+                labelError shouldBeEqualTo null
             }
+        }
 
         @Test
         fun `Should send 'calendar label assigned' UI event, notifying the UI about the new label assign, when the validation results in success`() =
@@ -390,7 +380,7 @@ class CalendarExportViewModelTest {
             } returns mockk<Uri>()
 
             every {
-                DataSourceError.InternalStorageError.UnknownError.toUiMessage()
+                DataSourceError.AppSpecificStorageError.UnknownError.toUiMessage()
             } returns 0
         }
 
@@ -459,14 +449,12 @@ class CalendarExportViewModelTest {
         @Test
         fun `Should emit a 'data source error' UI event and stop calendars export, when an error result comes out when clearing out the app's cache folder`() =
             runTest {
+                val errorResult = Result.Error<Unit, DataSourceError>(
+                    error = DataSourceError.AppSpecificStorageError.UnknownError,
+                )
                 coEvery {
                     calendarsRepositoryMock.clearCacheDir()
-                } returns Result.Error(error = DataSourceError.InternalStorageError.UnknownError)
-
-                val errorMessageId = faker.random.nextInt()
-                every {
-                    DataSourceError.InternalStorageError.UnknownError.toUiMessage()
-                } returns errorMessageId
+                } returns errorResult
 
                 val bitmapMock1 = mockk<Bitmap>(relaxUnitFun = true)
                 val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
@@ -487,8 +475,8 @@ class CalendarExportViewModelTest {
                     advanceUntilIdle()
 
                     val event = awaitItem()
-                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
-                        messageId = errorMessageId,
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
+                        error = errorResult.error,
                     )
 
                     expectNoEvents()
@@ -599,6 +587,9 @@ class CalendarExportViewModelTest {
                 val calendarMonthYear2 = newSelectedDatesRandom.keys.toList()[1]
                 val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
 
+                val errorResult = Result.Error<File, DataSourceError>(
+                    error = DataSourceError.AppSpecificStorageError.UnknownError,
+                )
                 coEvery {
                     val monthYearString = "${calendarMonthYear2.month}${calendarMonthYear2.year}"
 
@@ -607,11 +598,11 @@ class CalendarExportViewModelTest {
                         fileName = "calendar-$monthYearString-$currentTimestamp.png",
                         parentFolder = cacheFolderMock,
                     )
-                } returns Result.Error(error = DataSourceError.InternalStorageError.UnknownError)
+                } returns errorResult
 
                 val errorMessageId = faker.random.nextInt()
                 every {
-                    DataSourceError.InternalStorageError.UnknownError.toUiMessage()
+                    DataSourceError.AppSpecificStorageError.UnknownError.toUiMessage()
                 } returns errorMessageId
 
                 sut.uiEvents.test {
@@ -630,8 +621,8 @@ class CalendarExportViewModelTest {
                     advanceUntilIdle()
 
                     val event = awaitItem()
-                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceError(
-                        messageId = errorMessageId,
+                    event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
+                        error = errorResult.error,
                     )
 
                     expectNoEvents()
@@ -672,18 +663,40 @@ class CalendarExportViewModelTest {
         }
 
         @Test
-        fun `Should update the calendars bitmaps map entry associated with a calendar with it's collected bitmap`() =
-            runTest {
-                val calendarMonthYearRandom = newSelectedDatesRandom.keys.random()
-                val bitmapMock: Bitmap = mockk(relaxUnitFun = true)
+        fun `Should update the calendars bitmaps map entry associated with a calendar with it's collected bitmap`() {
+            val calendarMonthYearRandom = newSelectedDatesRandom.keys.random()
+            val bitmapMock: Bitmap = mockk(relaxUnitFun = true)
 
-                sut.onConvertedCalendarToBitmap(
-                    calendarMonthYear = calendarMonthYearRandom,
-                    bitmap = bitmapMock,
-                )
+            sut.onConvertedCalendarToBitmap(
+                calendarMonthYear = calendarMonthYearRandom,
+                bitmap = bitmapMock,
+            )
 
-                sut.calendarsBitmaps.value[calendarMonthYearRandom]
-                    .shouldBeEqualTo(bitmapMock)
-            }
+            sut.calendarsBitmaps.value[calendarMonthYearRandom]
+                .shouldBeEqualTo(bitmapMock)
+        }
+    }
+
+    @Nested
+    @DisplayName("getDeviceFreeStoragePercent")
+    inner class GetDeviceFreeStoragePercentTests {
+        @Test
+        fun `Should return the correct device storage free space percent of the total storage`() {
+            val freeStorageSpace = faker.random.nextLong()
+            coEvery {
+                calendarsRepositoryMock.getDeviceFreeStorageBytes()
+            } returns freeStorageSpace
+
+            val totalStorageSpace = faker.random.nextLong()
+            coEvery {
+                calendarsRepositoryMock.getDeviceTotalStorageBytes()
+            } returns totalStorageSpace
+
+            val freeSpacePercent = sut.getDeviceFreeStoragePercent()
+
+            freeSpacePercent.shouldBeEqualTo(
+                (freeStorageSpace.toDouble() / totalStorageSpace.toDouble() * 100).toInt()
+            )
+        }
     }
 }

@@ -32,16 +32,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fstengineering.daterangeexporter.calendarExport.composables.BaseCalendar
 import com.fstengineering.daterangeexporter.calendarExport.composables.CalendarExportTopBar
-import com.fstengineering.daterangeexporter.calendarExport.composables.CalendarLabelAssignDialog
-import com.fstengineering.daterangeexporter.calendarExport.composables.DateRangePickerDialog
 import com.fstengineering.daterangeexporter.calendarExport.composables.NoSelectedDatesEmptySection
 import com.fstengineering.daterangeexporter.calendarExport.composables.PrimaryActionRow
 import com.fstengineering.daterangeexporter.calendarExport.composables.SecondaryActionsRow
+import com.fstengineering.daterangeexporter.calendarExport.composables.dialogs.CalendarLabelAssignDialog
+import com.fstengineering.daterangeexporter.calendarExport.composables.dialogs.DateRangePickerDialog
+import com.fstengineering.daterangeexporter.calendarExport.composables.dialogs.InsufficientStorageDialog
 import com.fstengineering.daterangeexporter.calendarExport.models.RangeSelectionLabel
 import com.fstengineering.daterangeexporter.core.application.theme.AppTheme
-import com.fstengineering.daterangeexporter.core.presentation.utils.IMAGE_PNG_TYPE
+import com.fstengineering.daterangeexporter.core.domain.utils.DataSourceError
+import com.fstengineering.daterangeexporter.core.presentation.constants.IMAGE_PNG_MIME_TYPE
 import com.fstengineering.daterangeexporter.core.presentation.utils.itemsIndexed
 import com.fstengineering.daterangeexporter.core.presentation.utils.showShareSheet
+import com.fstengineering.daterangeexporter.core.presentation.utils.uiConverters.toUiMessage
 import org.koin.androidx.compose.koinViewModel
 
 private const val FIXED_VISIBLE_LIST_ITEMS = 4
@@ -72,12 +75,21 @@ fun CalendarExportScreen(
 
     var mustShowDateRangePickerDialog by rememberSaveable { mutableStateOf(false) }
     var mustShowLabelAssignDialog by rememberSaveable { mutableStateOf(false) }
+    var mustShowInsufficientStorageDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { uiEvent ->
             when (uiEvent) {
-                is CalendarExportViewModel.UiEvents.DataSourceError -> {
-                    showSnackbar(context.getString(uiEvent.messageId))
+                is CalendarExportViewModel.UiEvents.DataSourceErrorEvent -> {
+                    val uiMessage = uiEvent.error.toUiMessage()
+
+                    when (uiEvent.error) {
+                        DataSourceError.AppSpecificStorageError.IOError -> {
+                            mustShowInsufficientStorageDialog = true
+                        }
+
+                        else -> showSnackbar(context.getString(uiMessage))
+                    }
                 }
 
                 is CalendarExportViewModel.UiEvents.CalendarLabelAssigned -> {
@@ -221,17 +233,35 @@ fun CalendarExportScreen(
                 },
             )
         }
+
+        if (mustShowInsufficientStorageDialog) {
+            InsufficientStorageDialog(
+                freeSpacePercent = viewModel.getDeviceFreeStoragePercent(),
+                onFreeSpace = {
+                    val storageInsufficientIntent = Intent(Intent.ACTION_MANAGE_PACKAGE_STORAGE)
+                    context.startActivity(storageInsufficientIntent)
+                },
+                onCancel = {
+                    mustShowInsufficientStorageDialog = false
+                },
+            )
+        }
     }
 }
 
 private fun Context.exportCalendars(
     contentUris: ArrayList<Uri>,
 ) {
-    showShareSheet(action = Intent.ACTION_SEND_MULTIPLE) {
-        type = IMAGE_PNG_TYPE
+    val action = if (contentUris.size == 1) {
+        Intent.ACTION_SEND
+    } else Intent.ACTION_SEND_MULTIPLE
+
+    showShareSheet(action = action) {
+        type = IMAGE_PNG_MIME_TYPE
         flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
 
-        putParcelableArrayListExtra(Intent.EXTRA_STREAM, contentUris)
+        if (contentUris.size == 1) putExtra(Intent.EXTRA_STREAM, contentUris[0])
+        else putParcelableArrayListExtra(Intent.EXTRA_STREAM, contentUris)
     }
 }
 

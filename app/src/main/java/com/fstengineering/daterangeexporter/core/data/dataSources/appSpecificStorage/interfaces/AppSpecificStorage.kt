@@ -1,9 +1,9 @@
-package com.fstengineering.daterangeexporter.core.data.dataSources.internalStorage.interfaces
+package com.fstengineering.daterangeexporter.core.data.dataSources.appSpecificStorage.interfaces
 
 import android.graphics.Bitmap
 import java.io.File
 
-interface InternalStorage {
+interface AppSpecificStorage {
     suspend fun saveImage(
         bitmap: Bitmap,
         fileName: String,
