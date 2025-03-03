@@ -14,7 +14,7 @@ A native Android app that allows users to select multiple date ranges and share 
 
 - Up to **3 calendar date ranges selection**, distinguished by different drawings and colors;
 - Add a **chip label** to the calendars to identify the selection;
-- **Share selection screenshots** to other apps;
+- **Share screenshots** of each calendar in the selection to other apps;
 - **Internationalization** for English, Spanish and Portuguese languages.
 
 Worked with:
