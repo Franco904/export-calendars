@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.fstengineering.exportcalendars.dev" />
+                  <option name="mobileSdkAppId" value="1:1086315718029:android:470fc7715729f1d20b09c4" />
+                  <option name="projectId" value="export-calendars-3a3cc" />
+                  <option name="projectNumber" value="1086315718029" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

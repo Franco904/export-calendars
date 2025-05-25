@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "date-range-exporter"
+rootProject.name = "export-calendars"
 include(":app")
  
