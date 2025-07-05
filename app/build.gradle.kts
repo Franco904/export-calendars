@@ -4,14 +4,16 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinParcelize)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.crashlytics)
 }
 
 android {
-    namespace = "com.fstengineering.daterangeexporter"
+    namespace = "com.fstengineering.exportcalendars"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.fstengineering.daterangeexporter"
+        applicationId = "com.fstengineering.exportcalendars"
         minSdk = 30
         targetSdk = 35
         versionCode = 1
@@ -25,14 +27,39 @@ android {
         )
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(project.property("KEYSTORE_FILE") as String)
+            storePassword = project.property("KEYSTORE_PASSWORD") as String
+            keyAlias = project.property("KEY_ALIAS") as String
+            keyPassword = project.property("KEY_PASSWORD") as String
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
+
             isMinifyEnabled = false
+            isShrinkResources = false
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    flavorDimensions += "env"
+
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+        }
+        create("prod") {
+            dimension = "env"
         }
     }
 
@@ -92,6 +119,12 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlin.serialization.json)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     // Testing
     androidTestImplementation(libs.androidx.test.runner)

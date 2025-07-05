@@ -1,0 +1,3 @@
+package com.fstengineering.exportcalendars.core.application.constants
+
+const val ON_ADD_RANGE_AFTER_MAX_COUNT_REACHED_EVENT_NAME = "on_add_range_after_max_count_reached"
