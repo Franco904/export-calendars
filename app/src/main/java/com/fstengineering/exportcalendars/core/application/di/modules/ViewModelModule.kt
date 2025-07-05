@@ -10,6 +10,8 @@ val viewModelModule = module {
         CalendarExportViewModel(
             calendar = Calendar.getInstance(),
             appContext = get(),
+            dataSourceErrorConverter = get(),
+            validationErrorConverter = get(),
             calendarsRepository = get(),
             calendarsValidator = get(),
             calendarExportUtils = get(),

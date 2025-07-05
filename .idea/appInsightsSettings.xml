@@ -4,13 +4,27 @@
     <option name="selectedTabId" value="Android Vitals" />
     <option name="tabSettings">
       <map>
+        <entry key="Android Vitals">
+          <value>
+            <InsightsFilterSettings>
+              <option name="connection">
+                <ConnectionSetting>
+                  <option name="appId" value="com.fstengineering.exportcalendars" />
+                </ConnectionSetting>
+              </option>
+              <option name="signal" value="SIGNAL_UNSPECIFIED" />
+              <option name="timeIntervalDays" value="SEVEN_DAYS" />
+              <option name="visibilityType" value="ALL" />
+            </InsightsFilterSettings>
+          </value>
+        </entry>
         <entry key="Firebase Crashlytics">
           <value>
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.fstengineering.exportcalendars.dev" />
-                  <option name="mobileSdkAppId" value="1:1086315718029:android:470fc7715729f1d20b09c4" />
+                  <option name="appId" value="com.fstengineering.exportcalendars" />
+                  <option name="mobileSdkAppId" value="1:1086315718029:android:1b008868473da0730b09c4" />
                   <option name="projectId" value="export-calendars-3a3cc" />
                   <option name="projectNumber" value="1086315718029" />
                 </ConnectionSetting>

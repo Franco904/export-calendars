@@ -44,7 +44,6 @@ import com.fstengineering.exportcalendars.core.domain.utils.DataSourceError
 import com.fstengineering.exportcalendars.core.presentation.constants.IMAGE_PNG_MIME_TYPE
 import com.fstengineering.exportcalendars.core.presentation.utils.itemsIndexed
 import com.fstengineering.exportcalendars.core.presentation.utils.showShareSheet
-import com.fstengineering.exportcalendars.core.presentation.utils.uiConverters.toUiMessage
 import org.koin.androidx.compose.koinViewModel
 
 private const val FIXED_VISIBLE_LIST_ITEMS = 4
@@ -83,14 +82,12 @@ fun CalendarExportScreen(
         viewModel.uiEvents.collect { uiEvent ->
             when (uiEvent) {
                 is CalendarExportViewModel.UiEvents.DataSourceErrorEvent -> {
-                    val uiMessage = uiEvent.error.toUiMessage()
-
                     when (uiEvent.error) {
                         DataSourceError.AppSpecificStorageError.IOError -> {
                             mustShowInsufficientStorageDialog = true
                         }
 
-                        else -> showSnackbar(context.getString(uiMessage))
+                        else -> showSnackbar(context.getString(uiEvent.uiMessage))
                     }
                 }
 

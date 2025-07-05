@@ -8,15 +8,14 @@ import com.fstengineering.exportcalendars.calendarExport.models.CalendarMonthYea
 import com.fstengineering.exportcalendars.calendarExport.models.CalendarSelectedDate
 import com.fstengineering.exportcalendars.calendarExport.utils.interfaces.CalendarExportUtils
 import com.fstengineering.exportcalendars.core.application.contentProviders.interfaces.AppFileProviderHandler
+import com.fstengineering.exportcalendars.core.application.monitoring.interfaces.AppLogger
 import com.fstengineering.exportcalendars.core.domain.repositories.CalendarsRepository
 import com.fstengineering.exportcalendars.core.domain.utils.DataSourceError
 import com.fstengineering.exportcalendars.core.domain.utils.Result
 import com.fstengineering.exportcalendars.core.domain.utils.ValidationError
 import com.fstengineering.exportcalendars.core.domain.validators.interfaces.CalendarsValidator
-import com.fstengineering.exportcalendars.core.presentation.utils.uiConverters.toUiMessage
+import com.fstengineering.exportcalendars.core.presentation.utils.uiConverters.ErrorConverter
 import com.fstengineering.exportcalendars.testUtils.MainDispatcherExtension
-import com.fstengineering.exportcalendars.testUtils.constants.DATA_SOURCE_ERROR_CONVERTER_FILE_NAME
-import com.fstengineering.exportcalendars.testUtils.constants.VALIDATION_ERROR_CONVERTER_FILE_NAME
 import com.fstengineering.exportcalendars.testUtils.faker
 import com.fstengineering.exportcalendars.testUtils.randoms.createCalendarMonthYearRandom
 import com.fstengineering.exportcalendars.testUtils.randoms.createCalendarSelectedDateRandom
@@ -44,6 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import java.util.Calendar
 import kotlin.properties.Delegates.notNull
+import kotlin.random.Random
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @ExtendWith(MainDispatcherExtension::class)
@@ -52,10 +52,13 @@ class CalendarExportViewModelTest {
 
     private lateinit var calendarMock: Calendar
     private lateinit var appContextMock: Context
+    private lateinit var dataSourceErrorConverterMock: ErrorConverter<DataSourceError>
+    private lateinit var validationErrorConverterMock: ErrorConverter<ValidationError>
     private lateinit var calendarsRepositoryMock: CalendarsRepository
     private lateinit var calendarsValidatorMock: CalendarsValidator
     private lateinit var calendarExportUtilsMock: CalendarExportUtils
     private lateinit var appFileProviderHandlerMock: AppFileProviderHandler
+    private lateinit var appLoggerMock: AppLogger
 
     private val currentDayOfMonthRandom = faker.random.nextInt()
     private val currentMonthRandom = faker.random.nextInt()
@@ -68,10 +71,13 @@ class CalendarExportViewModelTest {
         sut = CalendarExportViewModel(
             calendar = calendarMock,
             appContext = appContextMock,
+            dataSourceErrorConverter = dataSourceErrorConverterMock,
+            validationErrorConverter = validationErrorConverterMock,
             calendarsRepository = calendarsRepositoryMock,
             calendarsValidator = calendarsValidatorMock,
             calendarExportUtils = calendarExportUtilsMock,
             appFileProviderHandler = appFileProviderHandlerMock,
+            appLogger = appLoggerMock,
         )
     }
 
@@ -85,10 +91,13 @@ class CalendarExportViewModelTest {
         }
 
         appContextMock = mockk(relaxUnitFun = true)
+        dataSourceErrorConverterMock = mockk(relaxUnitFun = true)
+        validationErrorConverterMock = mockk(relaxUnitFun = true)
         calendarsRepositoryMock = mockk(relaxUnitFun = true)
         calendarsValidatorMock = mockk(relaxUnitFun = true)
         calendarExportUtilsMock = mockk(relaxUnitFun = true)
         appFileProviderHandlerMock = mockk(relaxUnitFun = true)
+        appLoggerMock = mockk(relaxUnitFun = true)
     }
 
     @AfterEach
@@ -138,7 +147,7 @@ class CalendarExportViewModelTest {
             val newSelectedDatesRandom =
                 mutableMapOf<CalendarMonthYear, ImmutableList<CalendarSelectedDate>>()
                     .apply {
-                        for (i in 0..mapSizeRandom) {
+                        repeat(mapSizeRandom) {
                             val randomSelectedDatesSize =
                                 faker.random.nextInt(min = 1, max = 31)
 
@@ -264,14 +273,7 @@ class CalendarExportViewModelTest {
 
         @BeforeEach
         fun setUp() {
-            mockkStatic(VALIDATION_ERROR_CONVERTER_FILE_NAME)
-
             randomLabel = faker.random.randomString(min = 1, max = 20)
-        }
-
-        @AfterEach
-        fun tearDown() {
-            unmockkStatic(VALIDATION_ERROR_CONVERTER_FILE_NAME)
         }
 
         @Test
@@ -283,7 +285,7 @@ class CalendarExportViewModelTest {
 
                 val errorMessageId = faker.random.nextInt()
                 for (error in ValidationError.CalendarLabel.entries) {
-                    every { error.toUiMessage() } returns errorMessageId
+                    every { validationErrorConverterMock.toUiMessage(error) } returns errorMessageId
                 }
 
                 sut.uiEvents.test {
@@ -363,8 +365,6 @@ class CalendarExportViewModelTest {
         }
 
         private fun configureDefaultStubs() {
-            mockkStatic(DATA_SOURCE_ERROR_CONVERTER_FILE_NAME)
-
             coEvery { calendarsRepositoryMock.clearCacheDir() } returns Result.Success(data = Unit)
 
             every { calendarMock.timeInMillis } returns System.currentTimeMillis()
@@ -380,13 +380,8 @@ class CalendarExportViewModelTest {
             } returns mockk<Uri>()
 
             every {
-                DataSourceError.AppSpecificStorageError.UnknownError.toUiMessage()
+                dataSourceErrorConverterMock.toUiMessage(DataSourceError.AppSpecificStorageError.UnknownError)
             } returns 0
-        }
-
-        @AfterEach
-        fun tearDown() {
-            unmockkStatic(DATA_SOURCE_ERROR_CONVERTER_FILE_NAME)
         }
 
         @Test
@@ -452,9 +447,14 @@ class CalendarExportViewModelTest {
                 val errorResult = Result.Error<Unit, DataSourceError>(
                     error = DataSourceError.AppSpecificStorageError.UnknownError,
                 )
+                val uiMessage = Random.nextInt()
+
                 coEvery {
                     calendarsRepositoryMock.clearCacheDir()
                 } returns errorResult
+                coEvery {
+                    dataSourceErrorConverterMock.toUiMessage(errorResult.error)
+                } returns uiMessage
 
                 val bitmapMock1 = mockk<Bitmap>(relaxUnitFun = true)
                 val bitmapMock2 = mockk<Bitmap>(relaxUnitFun = true)
@@ -477,6 +477,7 @@ class CalendarExportViewModelTest {
                     val event = awaitItem()
                     event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
                         error = errorResult.error,
+                        uiMessage = uiMessage,
                     )
 
                     expectNoEvents()
@@ -602,7 +603,7 @@ class CalendarExportViewModelTest {
 
                 val errorMessageId = faker.random.nextInt()
                 every {
-                    DataSourceError.AppSpecificStorageError.UnknownError.toUiMessage()
+                    dataSourceErrorConverterMock.toUiMessage(DataSourceError.AppSpecificStorageError.UnknownError)
                 } returns errorMessageId
 
                 sut.uiEvents.test {
@@ -623,6 +624,7 @@ class CalendarExportViewModelTest {
                     val event = awaitItem()
                     event shouldBeEqualTo CalendarExportViewModel.UiEvents.DataSourceErrorEvent(
                         error = errorResult.error,
+                        uiMessage = errorMessageId,
                     )
 
                     expectNoEvents()

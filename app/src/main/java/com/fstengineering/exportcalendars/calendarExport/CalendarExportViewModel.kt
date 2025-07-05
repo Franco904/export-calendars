@@ -15,10 +15,11 @@ import com.fstengineering.exportcalendars.core.application.contentProviders.inte
 import com.fstengineering.exportcalendars.core.application.monitoring.interfaces.AppLogger
 import com.fstengineering.exportcalendars.core.domain.repositories.CalendarsRepository
 import com.fstengineering.exportcalendars.core.domain.utils.DataSourceError
+import com.fstengineering.exportcalendars.core.domain.utils.ValidationError
 import com.fstengineering.exportcalendars.core.domain.utils.fold
 import com.fstengineering.exportcalendars.core.domain.utils.onError
 import com.fstengineering.exportcalendars.core.domain.validators.interfaces.CalendarsValidator
-import com.fstengineering.exportcalendars.core.presentation.utils.uiConverters.toUiMessage
+import com.fstengineering.exportcalendars.core.presentation.utils.uiConverters.ErrorConverter
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableMap
@@ -36,6 +37,8 @@ import kotlin.time.Duration.Companion.milliseconds
 class CalendarExportViewModel(
     private val calendar: Calendar,
     private val appContext: Context,
+    private val dataSourceErrorConverter: ErrorConverter<DataSourceError>,
+    private val validationErrorConverter: ErrorConverter<ValidationError>,
     private val calendarsRepository: CalendarsRepository,
     private val calendarsValidator: CalendarsValidator,
     private val calendarExportUtils: CalendarExportUtils,
@@ -110,7 +113,9 @@ class CalendarExportViewModel(
     fun onCalendarLabelAssign(label: String?) {
         calendarsValidator.validateLabel(label = label)
             .onError { error ->
-                _calendarFormUiState.update { it.copy(labelError = error.toUiMessage()) }
+                _calendarFormUiState.update {
+                    it.copy(labelError = validationErrorConverter.toUiMessage(error))
+                }
                 return
             }
 
@@ -140,8 +145,9 @@ class CalendarExportViewModel(
             calendarsBitmaps.value.entries.find { (_, a) -> a == null }?.key
 
         if (firstMissingBitmapCalendar != null) {
-            val firstMissingCalendarIndex =
-                selectedDates.value.keys.indexOfFirst { calendar -> calendar == firstMissingBitmapCalendar }
+            val firstMissingCalendarIndex = selectedDates.value.keys.indexOfFirst { calendar ->
+                calendar == firstMissingBitmapCalendar
+            }
 
             delay(150.milliseconds)
             _uiEvents.send(
@@ -156,7 +162,12 @@ class CalendarExportViewModel(
         viewModelScope.launch {
             calendarsRepository.clearCacheDir()
                 .onError { error ->
-                    _uiEvents.send(UiEvents.DataSourceErrorEvent(error = error))
+                    _uiEvents.send(
+                        UiEvents.DataSourceErrorEvent(
+                            error = error,
+                            uiMessage = dataSourceErrorConverter.toUiMessage(error),
+                        )
+                    )
                     return@launch
                 }
 
@@ -195,7 +206,12 @@ class CalendarExportViewModel(
                 onError = { error ->
                     _calendarsBitmaps.update { persistentMapOf() }
 
-                    _uiEvents.send(UiEvents.DataSourceErrorEvent(error = error))
+                    _uiEvents.send(
+                        UiEvents.DataSourceErrorEvent(
+                            error = error,
+                            uiMessage = dataSourceErrorConverter.toUiMessage(error)
+                        )
+                    )
                     return null
                 },
                 onSuccess = { file ->
@@ -225,7 +241,7 @@ class CalendarExportViewModel(
     }
 
     sealed interface UiEvents {
-        data class DataSourceErrorEvent(val error: DataSourceError) : UiEvents
+        data class DataSourceErrorEvent(val error: DataSourceError, val uiMessage: Int) : UiEvents
 
         data object CalendarLabelAssigned : UiEvents
 

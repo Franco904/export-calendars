@@ -5,6 +5,7 @@ import com.fstengineering.exportcalendars.core.application.di.modules.contentPro
 import com.fstengineering.exportcalendars.core.application.di.modules.dataSourceModule
 import com.fstengineering.exportcalendars.core.application.di.modules.monitoringModule
 import com.fstengineering.exportcalendars.core.application.di.modules.repositoryModule
+import com.fstengineering.exportcalendars.core.application.di.modules.uiConverterModule
 import com.fstengineering.exportcalendars.core.application.di.modules.utilModule
 import com.fstengineering.exportcalendars.core.application.di.modules.validatorModule
 import com.fstengineering.exportcalendars.core.application.di.modules.viewModelModule
@@ -24,6 +25,7 @@ fun Application.configureDependencyInjection() {
             dataSourceModule,
             repositoryModule,
             validatorModule,
+            uiConverterModule,
             viewModelModule,
         )
     }
