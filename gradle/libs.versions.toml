@@ -1,15 +1,15 @@
 [versions]
 # Libraries
-coreKtx = "1.13.1"
+coreKtx = "1.16.0"
 
-lifecycle = "2.8.6"
-activityCompose = "1.9.2"
-composeBom = "2024.09.03"
+lifecycle = "2.9.1"
+activityCompose = "1.10.1"
+composeBom = "2025.06.01"
 kotlinCollectionsImmutable = "0.3.7"
 serialization = "1.6.3"
 koin = "4.0.1"
 
-androidxTest = "1.6.1"
+androidxTest = "1.6.2"
 junit5 = "5.11.4"
 kotlinxCoroutinesTest = "1.10.1"
 kluent = "1.73"
@@ -17,13 +17,13 @@ mockk = "1.13.16"
 turbine = "1.2.0"
 faker = "1.16.0"
 
-firebaseBom = "33.14.0"
+firebaseBom = "33.16.0"
 
 # Plugins
-agp = "8.7.3"
+agp = "8.10.1"
 kotlin = "2.0.20"
-googleServices = "4.4.2"
-crashlytics = "3.0.3"
+googleServices = "4.4.3"
+crashlytics = "3.0.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
